@@ -145,6 +145,8 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
     n_features = x0.numel()
     n_classes  = 10
 ##############################################3
+
+
     loopcount = 0
     #try 10 random configurations adjust parameters and get the highest accuracy
     config_attempts = 10
@@ -163,6 +165,7 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
         
         train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
         val_loader   = DataLoader(val_dataset,   batch_size=batch_size_choice, shuffle=False)
+
         model = build_mlp(n_features, layer_choice,hidden_choice, n_classes)
         optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate_choice, weight_decay=aplha_choice)
         criterion = nn.CrossEntropyLoss()
@@ -170,14 +173,11 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
         ############################################################################# needs revision
 
 
-        weight_params, bias_params = [], []
+        weight_params =[]
+        bias_params = []
         for name, p in model.named_parameters():
             (weight_params if 'weight' in name else bias_params).append(p)
-        optimizer = torch.optim.SGD(
-            [{'params': weight_params, 'weight_decay': aplha_choice},
-             {'params': bias_params,   'weight_decay': 0.0}],
-            lr=learning_rate_choice
-        )
+        optimizer = torch.optim.SGD([{'params': weight_params, 'weight_decay': aplha_choice},{'params': bias_params,   'weight_decay': 0.0}],lr=learning_rate_choice)
 
 
 
@@ -253,20 +253,36 @@ n_features = X_train.shape[1]
 n_classes = int(y_train.max() + 1)
 # Instantiate the best model
 # BEGIN YOUR CODE HERE (~3 lines)
+
+best_model = build_mlp(
+    n_features,
+    best_cfg['layers'],    
+    best_cfg['hidden'],
+    n_classes
+)
+
+
+
 # END YOUR CODE HERE
 
 # create full training loader and test loader
-batch_size = full_train.shape[0]
+batch_size = best_cfg['batch']  
 full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(best_model.parameters(), lr=best_cfg['lr'])
+optimizer = torch.optim.SGD(best_model.parameters(), lr=best_cfg['learning_rate'])
 
 # retrain best model
 epochs_final = 50
 parameter_history = []  # To store the history of parameters
 for epoch in range(epochs_final):
     # BEGIN YOUR CODE HERE (~2 lines)
+
+    #needs revision
+    t0 = __import__('time').time(); loss, flat_params = train_epoch(best_model, full_train_loader, criterion, optimizer)
+    parameter_history.append(flat_params); test_acc = evaluate(best_model, test_loader); t1 = __import__('time').time()
+
+
     # END YOUR CODE HERE
     print(f"Final Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
 
