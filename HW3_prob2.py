@@ -11,10 +11,12 @@ import tqdm
 #comment it out if it's acting weird for you Tom
 ###############################################################################
 
-print("sees CUDA device:", torch.cuda.is_available())
-print("CUDA Version:", torch.version.cuda)
-if torch.cuda.is_available():
-    print("GPU in Use:", torch.cuda.get_device_name(0)) 
+#print("tom im checking if using GPU or CPU")
+
+#print("sees CUDA device:", torch.cuda.is_available())
+#print("CUDA Version:", torch.version.cuda)
+#if torch.cuda.is_available():
+#    print("GPU in Use:", torch.cuda.get_device_name(0)) 
 
 ###############################################################################
 
@@ -129,6 +131,7 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
 
     #Tom feel free to adjust these if that particular run chokes on your laptop's hardware
     #batch size, hidden, and layers are more likely to make stuff slug in my experience
+
     batch_sizes = [8,12,16,20,32,48,64,128,145,256]
     learning_rates= [0.01,0.005,0.001,0.0005,0.0001,0.00005,0.00001]
     layers = [2,3,4,5,6]
@@ -136,20 +139,75 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
     alphas = [0,0.0005,0.001,0.0001,0.00001]
     epochs = [15, 20, 25]
     
-    config_attempts = 20
-
-    #try 20 random configurations adjust to whatever number
-    for config_attempt in config_attempts:
     
-        layer_choice =  np.random.choice(layers).item()
-        batch_size_choice = np.random.choice(batch_sizes).item()
-        learning_rate_choice =np.random.choice(learning_rates).item()
-        hidden_choice = np.random.choice(hidden).item()
-        aplha_choice = np.random.choice(alphas).item()
-        epoch_choice = np.random.choice(epochs).item()
+    #########################################
+    x0, y0 = train_dataset[0]
+    n_features = x0.numel()
+    n_classes  = 10
+##############################################3
+    loopcount = 0
+    #try 10 random configurations adjust parameters and get the highest accuracy
+    config_attempts = 10
+    #you can change this as needed my dude
 
+
+    for _ in range(config_attempts):
+        
+        
+        layer_choice =  int(np.random.choice(layers).item())
+        batch_size_choice = int(np.random.choice(batch_sizes).item())
+        learning_rate_choice =float(np.random.choice(learning_rates).item())
+        hidden_choice = int(np.random.choice(hidden).item())
+        aplha_choice = float(np.random.choice(alphas).item())
+        epoch_choices = int(np.random.choice(epochs).item())
+        
         train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
         val_loader   = DataLoader(val_dataset,   batch_size=batch_size_choice, shuffle=False)
+        model = build_mlp(n_features, layer_choice,hidden_choice, n_classes)
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate_choice, weight_decay=aplha_choice)
+        criterion = nn.CrossEntropyLoss()
+
+        ############################################################################# needs revision
+
+
+        weight_params, bias_params = [], []
+        for name, p in model.named_parameters():
+            (weight_params if 'weight' in name else bias_params).append(p)
+        optimizer = torch.optim.SGD(
+            [{'params': weight_params, 'weight_decay': aplha_choice},
+             {'params': bias_params,   'weight_decay': 0.0}],
+            lr=learning_rate_choice
+        )
+
+
+
+
+        ################################################################################
+
+        for _e in range(epoch_choices):
+            train_epoch(model, train_loader, criterion, optimizer)
+    
+        current_accuracy = evaluate(model, val_loader)
+
+        #kind of a stupid sanity check to see what loop im on and to ensure its not like frozen
+        loopcount = loopcount +1
+        print("on loop ", loopcount)
+
+        if current_accuracy > best_acc:
+            best_acc = current_accuracy
+            print("best accuracy ",best_acc)
+            #best_configs = [layer_choice , batch_size_choice , learning_rate_choice, hidden_choice , aplha_choice , epoch_choices]
+
+            best_cfg = {
+                    "layers": layer_choice,
+                    "hidden": hidden_choice,
+                    "batch": batch_size_choice,
+                    "learning_rate": learning_rate_choice,
+                    "alpha": aplha_choice,
+                    "epochs": epoch_choices
+                }
+            
+            print("New best:", best_cfg, "val_acc=", f"{best_acc:.4f}")
 
 
 
