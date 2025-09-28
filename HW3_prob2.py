@@ -6,6 +6,20 @@ import matplotlib.pyplot as plt
 import tqdm
 
 
+#sanity test to ensure my desktop is picking my rtx 3080
+
+#comment it out if it's acting weird for you Tom
+###############################################################################
+
+print("sees CUDA device:", torch.cuda.is_available())
+print("CUDA Version:", torch.version.cuda)
+if torch.cuda.is_available():
+    print("GPU in Use:", torch.cuda.get_device_name(0)) 
+
+###############################################################################
+
+#end GPU check
+
 def build_mlp(input_dim, n_layers, hidden_units, output_dim):
     """Build an MLP with `n_layers` hidden linear+ReLU layers and a linear output.
 
@@ -16,6 +30,15 @@ def build_mlp(input_dim, n_layers, hidden_units, output_dim):
     """
     layers = []
     # BEGIN YOUR CODE HERE (~5-6 lines)
+
+    for _ in range(n_layers):
+        layers += [nn.Linear(input_dim,hidden_units), nn.ReLU()]
+        input_dim = hidden_units
+    
+    #Y_HAT = nn.Softmax(layers[-1]) I think I need to do this somewhere?  like softmax was in the ssignment
+    layers += [nn.Linear(input_dim, output_dim)]
+  
+    
     # END YOUR CODE HERE
     return nn.Sequential(*layers)
 
@@ -38,6 +61,16 @@ def train_epoch(model, loader, criterion, optimizer):
     running_loss = 0.0
     for X, y in loader:
         # BEGIN YOUR CODE HERE (~5-7 lines)
+
+
+        optimizer.zero_grad()
+        logits = model(X)
+        loss = criterion(logits, y)
+        loss.backward()
+        optimizer.step() 
+        
+
+
         # END YOUR CODE HERE
         running_loss += loss.item() * X.size(0)
 
@@ -54,7 +87,14 @@ def evaluate(model, loader):
     with torch.no_grad():
         for X, y in loader:
             # BEGIN YOUR CODE HERE (~4 lines)
-            pass
+
+            logits = model(X)  
+            preds = torch.argmax(logits, dim=1)
+            correct += (preds == y).sum().item()
+            total += y.size(0)
+
+
+           
             # END YOUR CODE HERE
 
     return correct / total
@@ -64,7 +104,11 @@ def compute_loss(model, loader, criterion):
     running_loss = 0.0
     for X, y in loader:
         # BEGIN YOUR CODE HERE (~3 lines)
-        pass
+        with torch.no_grad():
+            logits = model(X)
+            loss = criterion(logits, y)
+            running_loss += loss.item() * X.size(0)
+
         # END YOUR CODE HERE
     return running_loss / len(loader.dataset)
 
@@ -82,7 +126,34 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
     best_cfg = None
     best_acc = 0.0
     # BEGIN YOUR CODE HERE (~15-20 lines)
-    # END YOUR CODE HERE
+
+    #Tom feel free to adjust these if that particular run chokes on your laptop's hardware
+    #batch size, hidden, and layers are more likely to make stuff slug in my experience
+    batch_sizes = [8,12,16,20,32,48,64,128,145,256]
+    learning_rates= [0.01,0.005,0.001,0.0005,0.0001,0.00005,0.00001]
+    layers = [2,3,4,5,6]
+    hidden = [5,10,20,30,40]
+    alphas = [0,0.0005,0.001,0.0001,0.00001]
+    epochs = [15, 20, 25]
+    
+    config_attempts = 20
+
+    #try 20 random configurations adjust to whatever number
+    for config_attempt in config_attempts:
+    
+        layer_choice =  np.random.choice(layers).item()
+        batch_size_choice = np.random.choice(batch_sizes).item()
+        learning_rate_choice =np.random.choice(learning_rates).item()
+        hidden_choice = np.random.choice(hidden).item()
+        aplha_choice = np.random.choice(alphas).item()
+        epoch_choice = np.random.choice(epochs).item()
+
+        train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
+        val_loader   = DataLoader(val_dataset,   batch_size=batch_size_choice, shuffle=False)
+
+
+
+    # END YOUR CODE HERE    
 
     return best_cfg, best_acc
 
