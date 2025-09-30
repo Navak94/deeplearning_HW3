@@ -40,6 +40,85 @@ $$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$
     $$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$
     where $w_{l}$ represents any of the $w_{j}^{[l]}$ weights and $x_{l}$ represents any of the $x_{j}^{[l]}$ inputs.
 
+---
+
+## Answer
+
+We are given that He initialization samples weights from $\mathcal{N}(0, 2/n_l)$ which means that each weight has expectation and variance:
+
+$$E[w_j^{[l]}] = 0 \text{ and } \text{Var}[w_j^{[l]}] = 2/n_l \quad \text{(definition of } \mathcal{N}(\mu, \sigma^2))$$
+
+$$\text{Var}\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right] = E\left[\left(\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right)^2\right] - \left(E\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right]\right)^2$$
+$$\text{(Definition of Variance: } \text{Var}[Y] = E[Y^2] - (E[Y])^2)$$
+
+### Assumption 1: $w_j^{[l]}$ independent of all $x_k^{[l]}$
+
+
+To move forward, we need to assume that the weights $w_j^{[l]}$ are independent of the inputs $x_j^{[l]}$. This assumption allows us to factor terms of the form $E[w_j^{[l]} x_j^{[l]}] = E[w_j^{[l]}] \cdot E[x_j^{[l]}].$ Because we know from initialization that $E[w_j^{[l]}] = 0$, the full product is 0 and drops out of the equation.
+
+We are justified in this assumption because the random initialization of weights at layer $l$ is done before the network ever sees data, so the particular input values flowing through the network cannot influence the weights. Without this assumption, we would have to deal with the full joint distribution of $(w_j^{[l]}, x_j^{[l]})$.
+
+$$E\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right] = \sum_{j=1}^{n_l} E[w_j^{[l]} x_j^{[l]}] \quad \text{(Linearity of Expectation)}$$
+
+$$= \sum_{j=1}^{n_l} E[w_j^{[l]}] E[x_j^{[l]}] \quad \text{(Independence Theorem: } X \perp Y \Rightarrow E[XY] = E[X]E[Y])$$
+
+$$= \sum_{j=1}^{n_l} 0 \cdot E[x_j^{[l]}] = 0$$
+
+$$\text{Var}\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right] = E\left[\left(\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right)^2\right] - 0^2$$
+
+$$= E\left[\sum_{j=1}^{n_l}\sum_{k=1}^{n_l} w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}\right] \quad \text{(Expanding } (a_1 + \cdots + a_n)^2 = \sum_j \sum_k a_j a_k)$$
+
+$$= \sum_{j=1}^{n_l}\sum_{k=1}^{n_l} E[w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}] \quad \text{(Linearity of Expectation)}$$
+
+### Assumption 2: $w_j^{[l]}$ independent of $w_k^{[l]}$ for $j \neq k$
+
+When we expand the squared sum $(\sum_j w_j x_j)^2$, cross-terms of the form $E[w_j x_j w_k x_k]$ appear for $j \neq k$. 
+
+$$
+\text{Var}\!\left[\sum_{j=1}^{n_l} w_j x_j \right]
+= 
+E\!\left[
+\begin{bmatrix}
+w_1 x_1 & \cdots & w_{n_l} x_{n_l}
+\end{bmatrix}
+\begin{bmatrix}
+w_1 x_1 \\ \vdots \\ w_{n_l} x_{n_l}
+\end{bmatrix}
+\right]
+=
+\begin{bmatrix}
+\text{Var}[w_1 x_1] & \cdots & E[w_j x_j w_k x_k] & \cdots \\
+\vdots & \ddots & \vdots & \\
+E[w_k x_k w_j x_j] & \cdots & \text{Var}[w_{n_l} x_{n_l}]
+\end{bmatrix}
+$$
+
+
+We can't move forward if these terms exist. Therefore we assume that the weights themselves are independent, meaning knowledge of $w_1^{[l]}$ tells us nothing about $w_2^{[l]}$, and so on. This independence causes these cross-terms to be 0, leaving only the diagonal contributions. 
+
+
+Thus, for $j \neq k$:
+$$E[w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}] = E[w_j^{[l]}]E[x_j^{[l]}]E[w_k^{[l]}]E[x_k^{[l]}] = 0 \cdot E[x_j^{[l]}] \cdot 0 \cdot E[x_k^{[l]}] = 0$$
+$$\text{(Independence of all four random variables)}$$
+
+$$= \sum_{j=1}^{n_l} E[(w_j^{[l]})^2 (x_j^{[l]})^2] \quad \text{(only diagonal terms } j = k \text{ survive)}$$
+
+$$= \sum_{j=1}^{n_l} E[(w_j^{[l]} x_j^{[l]})^2]$$
+
+$$= \sum_{j=1}^{n_l} \left(\text{Var}[w_j^{[l]} x_j^{[l]}] + (E[w_j^{[l]} x_j^{[l]}])^2\right) \quad \text{(Variance-Mean Relation: } E[Y^2] = \text{Var}[Y] + (E[Y])^2)$$
+
+$$= \sum_{j=1}^{n_l} \text{Var}[w_j^{[l]} x_j^{[l]}] \quad \text{(since } E[w_j^{[l]} x_j^{[l]}] = E[w_j^{[l]}]E[x_j^{[l]}] = 0)$$
+
+### Assumption 3: All $w_j^{[l]}$ identically distributed, all $x_j^{[l]}$ identically distributed
+
+To simplify further we must assume that all these weight–input pairs are identically distributed. This assumption is justified because under He initialization all weights are drawn from the same distribution, and the architecture of the network ensures that the inputs $x_j^{[l]}$ at a given layer have the same statistical properties. Without assuming identical distributions, each term in the summation could be different, forcing us to track them one by one rather than collapsing them as we do below.
+
+$$= n_l \cdot \text{Var}[w^{[l]} x^{[l]}] \quad \text{(Identical Distribution: all terms equal)}$$
+
+
+---
+
+
 2.  (4 points) Show that
     $$Var[w_{l}x_{l}]=Var[w_{l}]\mathbb{E}[(x_{l})^{2}]$$using the following equality regarding the variance of the product of two mutually independent random variables A and B:$$Var[AB]=Var[A]Var[B]+Var[A]\mathbb{E}[B]^{2}+Var[B]\mathbb{E}[A]^{2} \quad (0.0.1)$$You will need to: (i) review and use the assumptions made about the distribution of $w_{l}$ and (ii) use the relationship between variance and second moment for a random variable B:$$Var[B]=\mathbb{E}[B^{2}]-\mathbb{E}[B]^{2}. \quad (0.0.2)$$
 
