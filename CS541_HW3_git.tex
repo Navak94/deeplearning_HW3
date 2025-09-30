@@ -1,0 +1,539 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+\KOMAoption{captions}{tableheading}
+\usepackage{multicol}
+\newcommand{\btwocol}{\begin{multicols}{2}}
+\newcommand{\etwocol}{\end{multicols}}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={CS/DS 541: Deep Learning},
+  pdfauthor={Tom Arnold \& Nate Hindman},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{CS/DS 541: Deep Learning}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Homework 3}
+\author{Tom Arnold \& Nate Hindman}
+\date{}
+
+\begin{document}
+\maketitle
+
+\RecustomVerbatimEnvironment{verbatim}{Verbatim}{
+  showspaces = false,
+  showtabs = false,
+  breaksymbolleft={},
+  breaklines
+  % Note: setting commandchars=\\\{\} here will cause an error
+}
+
+
+\emph{Due: 5:59pm ET Monday September 29}
+
+\emph{This problem can be done in teams of up 2 students.}
+
+\section{Problem 1: Deriving He's initialization {[}10 points + 5 bonus
+pts{]}}\label{problem-1-deriving-hes-initialization-10-points-5-bonus-pts}
+
+In Lecture 7, we learned about a widely used technique for setting the
+initial values of the weight parameters in a neural network: the
+\textbf{He initialization}. Specifically, it samples each weight value
+from \(\mathcal{N}(0,2/n_{l})\)---i.e., a 0-mean Gaussian distribution
+with variance \(2/n_{l}\) where \(n_{l}\) is the number of columns of
+the weight matrix \(W^{[l]}\) layer \(l\) (or, equivalently the
+dimension of the inputs fed to layer \(l\)).
+
+Here you are asked to derive some of the steps we skipped in class. We
+will start from:
+\[Var[z^{[l]}]=Var[w^{[l]}x^{[l]}]=Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]\]
+\[Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],\]
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  (2 points) Explain what are the assumptions that allow us to write:
+  \[Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],\]
+  where \(w_{l}\) represents any of the \(w_{j}^{[l]}\) weights and
+  \(x_{l}\) represents any of the \(x_{j}^{[l]}\) inputs.
+\item
+  (4 points) Show that
+  \[Var[w_{l}x_{l}]=Var[w_{l}]\mathbb{E}[(x_{l})^{2}]\]using the
+  following equality regarding the variance of the product of two
+  mutually independent random variables A and
+  B:\[Var[AB]=Var[A]Var[B]+Var[A]\mathbb{E}[B]^{2}+Var[B]\mathbb{E}[A]^{2} \quad (0.0.1)\]You
+  will need to: (i) review and use the assumptions made about the
+  distribution of \(w_{l}\) and (ii) use the relationship between
+  variance and second moment for a random variable
+  B:\[Var[B]=\mathbb{E}[B^{2}]-\mathbb{E}[B]^{2}. \quad (0.0.2)\]
+\item
+  Last, you need to relate the variance of the input \(x_{l}\) with the
+  variance of the pre-activation value \(z_{l-1}\) when the activation
+  function is \textbf{ReLU}, i.e.~when
+  \(x_{l}=ReLU(z_{l-1})=ReLU(w_{l-1}x_{l-1}+b_{l-1})\). Specifically,
+  you need to prove the relationship:
+  \[Var[z_{l-1}]=2\times\mathbb{E}[x_{l}^{2}].\] To do so, you will need
+  to use these assumptions:
+\end{enumerate}
+
+\begin{itemize}
+\tightlist
+\item
+  \(w_{l-1}\) has a \textbf{symmetric distribution around 0}, i.e., the
+  density \(f_{w_{l-1}}(w)=f_{w_{l-1}}(-w).\)
+\item
+  \(b_{l-1}=0\)
+\end{itemize}
+
+As a guide, try to answer these questions in order:
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\item
+  (2 points) What is the expected value of \({z_{l-1}}\)? Does it depend
+  on the value of \({x_{l-1}}?\)
+\item
+  (1 point) Think of \(x_{l-1}\) as a constant. What is the density
+  \(f_{z_{l-1}}(z)!\)
+\item
+  (1 point) Is the distribution of \(z_{l-1}\) symmetric around 0?
+\item
+  (BONUS: 3 points) The variance of a continuous random variable X is
+  given by \(\int_{-\infty}^{\infty}(x-\mathbb{E}[X])^{2}f_{X}(x)dx.\)
+  Write an expression for \(Var[z_{l-1}]\). Remember what you found in
+  item (a) about \(\mathbb{E}[z_{l-1}]\) and try to use the symmetry of
+  the distribution to write \(Var[z_{l-1}]\) only in terms of the
+  positive values of \(z_{l-1}\).
+\item
+  (BONUS: 2 points) Last, starting from the definition of the second
+  moment
+  \(\mathbb{E}[x_{l}^{2}]=\int_{-\infty}^{\infty}x_{l}^{2}f_{x_{l}}(x)d_{x}\)
+  , find ways to replace \(x_{l}\) by \(z_{l-1}\) conditioning on
+  whether \(z_{l-1}\) is negative or positive. You should be able to
+  find the expression you derived in item (d) for \(Var[z_{l-1}]\).
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Problem 2: Training NNs with pytorch {[}15 points + 2 bonus
+pts{]}}\label{problem-2-training-nns-with-pytorch-15-points-2-bonus-pts}
+
+In this problem you will use pytorch to train a multi-layer neural
+network to classify images of fashion items (10 different classes) from
+the \textbf{Fashion MNIST} dataset. Similarly to Homework 2, the input
+to the network will be a \(28\times28\) pixel image; the output will be
+a real number.
+
+Specifically, the starting network you will create should implement a
+function \(f:\mathbb{R}^{784}\rightarrow\mathbb{R}^{10},\) where:
+\[\begin{aligned}z^{(1)}&=W^{(1)}x+b^{(1)}\\ h^{(1)}&=ReLU(z^{(1)})\\ z^{(2)}&=W^{(2)}h^{(1)}+b^{(2)}\\ &:\end{aligned}\]
+\[\begin{aligned}z^{(l)}&=W^{(l)}h^{(l-1)}+b^{(l)}\\ \hat{y}&=softmax(z^{(l)})\end{aligned}\]
+The network specified above is shown in the figure below: X
+\(\rightarrow\) \(W^{(1)}\) \(\rightarrow\) \(b^{(1)}\) \(\rightarrow\)
+\(z^{(1)}\) \(\rightarrow\) \(h^{(1)}\) \(\rightarrow\) \(W^{(2)}\)
+\(\rightarrow\) \(\mathfrak{D}^{(2)}\) \(\rightarrow\) \(z^{(2)}\)
+\(h^{(2)}\) \(\rightarrow\) \ldots{} \(\rightarrow\) \(z^{(l)}\)
+\(\rightarrow\) \(W^{(l)}\)/ \(b^{(l)}\) \(\rightarrow\) \(\hat{y}\)
+
+As usual, the (unregularized) cross-entropy cost function should be:
+\[f_{CE}(W^{(1)},b^{(1)},...,W^{(l)},b^{(l)})=-\frac{1}{n}\sum_{i=1}^{n}\sum_{k=1}^{10}y_{k}^{(i)}log\hat{y}_{k}^{(i)}\]
+where \(n\) is the number of examples.
+
+The Fashion MNIST dataset can be obtained from the following web links:
+\url{https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_images.npy}
+\url{https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_labels.npy}
+\url{https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_images.npy}
+\url{https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_labels.npy}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  (6 points) Implement the same network using PyTorch or Tensorflow.
+\item
+  (5 points) Implement a method called \textbf{hyperparam\_tuning}.
+  Optimize the hyperparameters by training on the training set and
+  selecting the parameter settings that optimize performance on the
+  validation set. You should systematically (i.e., in code) try at least
+  \textbf{10} (in total, not for each hyperparameter) different
+  hyperparameter settings; \textbf{Hyperparameter tuning:} In this
+  problem, there are several different hyperparameters that will impact
+  the network's performance:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    (Required) \textbf{Number of hidden layers} (suggestions:
+    \(\{3,4,5\}\))
+  \item
+    \textbf{Number of units in each hidden layer} (suggestions:
+    \(\{30,40,50\}\))
+  \item
+    \textbf{Learning rate} (suggestions:
+    \(\{0.001, 0.005, 0.01, 0.05, 0.1, 0.5\}\))
+  \item
+    \textbf{Minibatch size} (suggestions: \(\{16,32, 64, 128, 256\}\))
+  \item
+    \textbf{Number of epochs}
+  \item
+    \(L_{2}\) \textbf{Regularization strength} applied to the weight
+    matrices (but not bias terms) In order not to ``cheat'' and thus
+    overestimate the performance of the network it is crucial to
+    optimize the hyperparameters \textbf{only on the validation set}; do
+    \textbf{not} use the test set. (The training set would be ok, but
+    typically leads to worse performance.) Hence, just like in Homework
+    2, you should fork off part of the training set into a validation
+    portion.
+  \end{itemize}
+\item
+  (4 points) After you have optimized your hyperparameters, then
+  re-train your network again and show a screenshot displaying the
+  training loss evolving over the last \textbf{20 iterations} of SGD.
+  (You can pick the last 20 mini-batches or last 20 epochs; it's up to
+  you). In addition, make sure your screenshot also displays the
+  \textbf{test accuracy} of the final trained classifier. The accuracy
+  (percentage correctly classified test images) should be \textbf{at
+  least 87\%}.
+\item
+  (2 bonus points) Now you have to experiment with a variant of the
+  previous network that includes either \textbf{BatchNorm, Dropout
+  layers} or \textbf{different activation functions} (e.g., LeakyReLU,
+  ELU or PReLU). Find an architecture that outperforms the one you found
+  in item 3 and report the test accuracy.
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Problem 3: Visualizing the loss landscape and optimization
+trajectories (15
+points)}\label{problem-3-visualizing-the-loss-landscape-and-optimization-trajectories-15-points}
+
+Visualize the SGD trajectory of your network when trained on Fashion
+MNIST:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Plot in 3-D the cross-entropy loss \(f_{CE}\) as a function of the
+  neural network parameters (weights and bias terms). Rather than
+  showing the loss as a function of any particular parameters (e.g., the
+  third component of \(b^{(2)}\)), use the \textbf{x and y-axes} to span
+  the two directions along which your parameters vary the most during
+  SGD training i.e., you will need to use \textbf{principal component
+  analysis (PCA)}. (In this assignment, you are free to use
+  \texttt{sklearn.decomposition.PCA}.) The \textbf{z-axis} should
+  represent the (unregularized) \(f_{CE}\) on training data. For each
+  point \((x,y)\) on a grid, compute \(f_{CE}\) and then interpolate
+  between the points. (The interpolation and rendering are handled for
+  you completely by the \texttt{plot\_surface} function; see the starter
+  code).
+\item
+  Superimpose a scatter plot of the different points (in the neural
+  network's parameter space) that were reached during SGD (just sample a
+  few times per epoch). To accelerate the rendering, train the network
+  and plot the surface using just a small subset of the training data
+  (e.g., 2500 examples) to estimate \(f_{CE}\). See the starter code, in
+  particular the \texttt{plotPath} function, for an example of 3-D
+  plotting. Submit your graph in the PDF file and the code in the Python
+  file.
+
+  Here is what I get when I superimpose two scatter plots corresponding
+  to two different initializations and SGD runs (note that you only need
+  to include a scatter plot for one run); as you can see, the two SGD
+  trajectories descended into distinct local minima (though with similar
+  cost):
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Problem 4: Autoencoder (20
+points)}\label{problem-4-autoencoder-20-points}
+
+This assignment explores one powerful concept in deep learning:
+\textbf{unsupervised representation learning with autoencoders}. You
+will build a neural network that learns to compress and then reconstruct
+images, forcing it to learn a meaningful representation of the data in
+the process.
+
+\subsection{Task 1: Data Preparation (2
+point)}\label{task-1-data-preparation-2-point}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Load the \textbf{Fashion MNIST} dataset using
+  \texttt{torchvision.datasets.FashionMNIST}.
+\item
+  Use \texttt{torchvision.transforms.ToTensor} to convert the images to
+  PyTorch tensors and normalize the pixel values to be in the range
+  \([0.0, 1.0]\).
+\item
+  Create a \texttt{DataLoader} for both the training and test sets. For
+  this unsupervised task, we only need the image data, not the labels.
+\end{enumerate}
+
+\subsection{Task 2: Autoencoder Architecture (6
+points)}\label{task-2-autoencoder-architecture-6-points}
+
+Construct a \textbf{dense autoencoder model} by creating a class that
+inherits from \texttt{torch.nn.Module}. The model should consist of an
+\textbf{encoder} and a \textbf{decoder} with the following symmetric
+architecture:
+
+\begin{itemize}
+\item
+  \textbf{An Encoder} that takes a flattened 784-dimensional input and
+  maps it to a compressed representation.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Input layer (implicitly defined by the input shape).
+  \item
+    Dense layer (\texttt{nn.Linear}) with \textbf{128 units} followed by
+    a \textbf{ReLU} activation (\texttt{nn.ReLU}).
+  \item
+    Dense layer with \textbf{64 units} followed by a \textbf{ReLU}
+    activation. This layer's output is the \textbf{latent
+    representation}, also known as the ``\textbf{bottleneck}''.
+  \end{itemize}
+\item
+  \textbf{A Decoder} that takes the 64-dimensional latent representation
+  and reconstructs the 784-dimensional image.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Dense layer with \textbf{128 units} followed by a \textbf{ReLU}
+    activation.
+  \item
+    Dense layer with \textbf{784 units} followed by a \textbf{Sigmoid}
+    activation (\texttt{nn.Sigmoid}). The sigmoid activation ensures the
+    output values are in the range \([0.0, 1.0]\), matching the
+    normalized input data.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Task 3: Model Training (6
+points)}\label{task-3-model-training-6-points}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Instantiate your model, a loss function (\texttt{nn.MSELoss} is a good
+  choice), and an optimizer (\texttt{torch.optim.Adam}).
+\item
+  Write a training loop that iterates for \textbf{20 epochs}. In each
+  epoch, iterate through the training \texttt{DataLoader}.
+\item
+  For each batch of images, you must:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Flatten the \(28\times28\) images into 784-dimensional vectors.
+  \item
+    Perform a forward pass to get the reconstructed images.
+  \item
+    Calculate the loss between the original and reconstructed images.
+  \item
+    Zero the gradients, perform a backward pass, and update the weights.
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Task 4: Visualizing Reconstructions (6
+points)}\label{task-4-visualizing-reconstructions-6-points}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Set your model to \textbf{evaluation mode}.
+\item
+  Get a batch of images from the test set and pass them through your
+  trained autoencoder to get the reconstructions.
+\item
+  Create a plot showing \textbf{two different original images} from the
+  test set and their corresponding reconstructions directly below them.
+\item
+  \textbf{Deliverable:} A single figure containing 4 images (2 original
+  test images, 2 reconstructed images), clearly labeled.
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Submission}\label{submission}
+
+Submit one PDF file that includes your notes for the theoretical
+problems (scanned or typed) and screenshots of your code for the
+programming problems. All material in the submitted PDF must be
+presented in a clear and readable format.
+
+If you are working as part of a group, then indicate the members on
+canvas:
+\href{https://www.google.com/search?q=https://canvas.wpi.edu/courses/76771/groups\%23tab-14853}{https://canvas.wpi.edu/courses/76771/groups\#tab-14853}.
+Once you do that, be aware that any submission from a team member will
+overwrite an existing one.
+
+\subsection{Teamwork}\label{teamwork}
+
+You may complete this homework assignment either individually or in
+teams up to 2 people.
+
+
+
+
+\end{document}
