@@ -317,6 +317,7 @@ below.
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \setcounter{enumi}{1}
+\tightlist
 \item
   (4 points) Show that
   \[Var[w_{l}x_{l}]=Var[w_{l}]\mathbb{E}[(x_{l})^{2}]\]using the
@@ -327,6 +328,34 @@ below.
   distribution of \(w_{l}\) and (ii) use the relationship between
   variance and second moment for a random variable
   B:\[Var[B]=\mathbb{E}[B^{2}]-\mathbb{E}[B]^{2}. \quad (0.0.2)\]
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-1}
+
+\[\text{Var}[w^{[l]} x^{[l]}] = E[(w^{[l]} x^{[l]})^2] - (E[w^{[l]} x^{[l]}])^2 \quad \text{(Definition of Variance)}\]
+
+\[E[w^{[l]} x^{[l]}] = E[w^{[l]}] \cdot E[x^{[l]}] \quad \text{(Independence Theorem)}\]
+
+\[= 0 \cdot E[x^{[l]}] = 0 \quad \text{(using } E[w^{[l]}] = 0 \text{ from He initialization)}\]
+
+\[\text{Var}[w^{[l]} x^{[l]}] = E[(w^{[l]} x^{[l]})^2] - 0^2 = E[(w^{[l]})^2 (x^{[l]})^2]\]
+
+\[= E[(w^{[l]})^2] \cdot E[(x^{[l]})^2] \quad \text{(Independence Theorem for products)}\]
+
+\[E[(w^{[l]})^2] = \text{Var}[w^{[l]}] + (E[w^{[l]}])^2 \quad \text{(Variance-Mean Relation)}\]
+
+\[= \text{Var}[w^{[l]}] + 0^2 = \text{Var}[w^{[l]}]\]
+
+\[\therefore \text{Var}[w^{[l]} x^{[l]}] = \text{Var}[w^{[l]}] \cdot E[(x^{[l]})^2]\]
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
 \item
   Last, you need to relate the variance of the input \(x_{l}\) with the
   variance of the pre-activation value \(z_{l-1}\) when the activation
@@ -373,6 +402,72 @@ As a guide, try to answer these questions in order:
   whether \(z_{l-1}\) is negative or positive. You should be able to
   find the expression you derived in item (d) for \(Var[z_{l-1}]\).
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-2}
+
+\subsubsection{\texorpdfstring{(a) Expected value of
+\(z_{l-1}\):}{(a) Expected value of z\_\{l-1\}:}}\label{a-expected-value-of-z_l-1}
+
+Given: \(b_{l-1} = 0\)
+
+\[z_{l-1} = \sum_{k=1}^{n_{l-1}} w_k^{[l-1]} x_k^{[l-1]}\]
+
+\[E[z_{l-1}] = E\left[\sum_{k=1}^{n_{l-1}} w_k^{[l-1]} x_k^{[l-1]}\right] = \sum_{k=1}^{n_{l-1}} E[w_k^{[l-1]} x_k^{[l-1]}] \quad \text{(Linearity of Expectation)}\]
+
+\[= \sum_{k=1}^{n_{l-1}} E[w_k^{[l-1]}] \cdot E[x_k^{[l-1]}] \quad \text{(Independence Theorem)}\]
+
+\[= \sum_{k=1}^{n_{l-1}} 0 \cdot E[x_k^{[l-1]}] = 0 \quad \text{(He initialization: } E[w_k^{[l-1]}] = 0)\]
+
+\subsubsection{\texorpdfstring{(b) Density of \(z_{l-1}\) given
+\(x_{l-1}\):}{(b) Density of z\_\{l-1\} given x\_\{l-1\}:}}\label{b-density-of-z_l-1-given-x_l-1}
+
+\[z_{l-1} = w_{l-1} \cdot x_{l-1} \quad \text{(treating } x_{l-1} \text{ as constant scalar)}\]
+
+\[f_{z_{l-1}|x_{l-1}}(z) = \frac{1}{|x_{l-1}|} f_{w_{l-1}}\left(\frac{z}{x_{l-1}}\right)\]
+\[\text{(Change of Variables Formula: if } Y = aX, \text{ then } f_Y(y) = \frac{1}{|a|}f_X(y/a))\]
+
+\subsubsection{(c) Symmetry:}\label{c-symmetry}
+
+Given: \(w_{l-1} \sim \mathcal{N}(0, \sigma^2)\)
+\[\Rightarrow f_{w_{l-1}}(w) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-w^2/(2\sigma^2)} = f_{w_{l-1}}(-w)\]
+\[\text{(Gaussian PDF is symmetric about its mean)}\]
+
+\[f_{z_{l-1}}(z) = f_{z_{l-1}}(-z) \quad \text{(Linear transformation preserves symmetry)}\]
+
+\subsubsection{(d) Variance calculation:}\label{d-variance-calculation}
+
+\[\text{Var}[z_{l-1}] = E[z_{l-1}^2] - (E[z_{l-1}])^2 = E[z_{l-1}^2] - 0 \quad \text{(Definition of Variance)}\]
+
+\[E[z_{l-1}^2] = \int_{-\infty}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Definition of Expectation for continuous RV)}\]
+
+\[= \int_{-\infty}^{0} z^2 f_{z_{l-1}}(z) dz + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Additivity of Integrals)}\]
+
+\[= \int_{0}^{\infty} u^2 f_{z_{l-1}}(-u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz\]
+\[\text{(U-Substitution Rule for Integrals: Let $u = -z$ in first integral, then $du = -dz$)}\]
+
+\[= \int_{0}^{\infty} u^2 f_{z_{l-1}}(u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz\]
+\[\text{(Using symmetry: } f_{z_{l-1}}(-u) = f_{z_{l-1}}(u))\]
+
+\[= 2 \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Both integrals are identical)}\]
+
+\subsubsection{\texorpdfstring{(e) Connecting to
+\(E[x_l^2]\):}{(e) Connecting to E{[}x\_l\^{}2{]}:}}\label{e-connecting-to-ex_l2}
+
+\[x_l = \text{ReLU}(z_{l-1}) = \begin{cases} z_{l-1} & \text{if } z_{l-1} > 0 \\ 0 & \text{if } z_{l-1} \leq 0 \end{cases} \quad \text{(Definition of ReLU)}\]
+
+\[E[x_l^2] = \int_{-\infty}^{\infty} [\text{ReLU}(z)]^2 f_{z_{l-1}}(z) dz \quad \text{(Definition of Expectation)}\]
+
+\[= \int_{-\infty}^{0} 0^2 \cdot f_{z_{l-1}}(z) dz + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz\]
+\[\text{(ReLU}(z) = 0 \text{ for } z \leq 0, \text{ ReLU}(z) = z \text{ for } z > 0)\]
+
+\[= 0 + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz = \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz\]
+
+From part (d):
+\(\text{Var}[z_{l-1}] = 2 \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz\)
+
+\[\therefore \text{Var}[z_{l-1}] = 2 \cdot E[x_l^2]\]
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
