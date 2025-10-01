@@ -270,8 +270,9 @@ batch_size = best_cfg['batch']
 full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(best_model.parameters(), lr=best_cfg['learning_rate'])
-
+optimizer = torch.optim.SGD(best_model.parameters(), 
+                          lr=best_cfg['learning_rate'], 
+                          weight_decay=best_cfg['alpha'])
 # retrain best model
 epochs_final = 50
 parameter_history = []  # To store the history of parameters
