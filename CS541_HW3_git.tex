@@ -544,8 +544,164 @@ The Fashion MNIST dataset can be obtained from the following web links:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
+\tightlist
 \item
   (6 points) Implement the same network using PyTorch or Tensorflow.
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-3}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
+\ImportTok{import}\NormalTok{ torch}
+\ImportTok{import}\NormalTok{ torch.nn }\ImportTok{as}\NormalTok{ nn}
+\ImportTok{from}\NormalTok{ torch.utils.data }\ImportTok{import}\NormalTok{ TensorDataset, DataLoader, random\_split}
+\ImportTok{import}\NormalTok{ matplotlib.pyplot }\ImportTok{as}\NormalTok{ plt}
+\ImportTok{import}\NormalTok{ tqdm}
+
+
+\CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+
+\BuiltInTok{print}\NormalTok{(}\StringTok{"sees CUDA device:"}\NormalTok{, torch.cuda.is\_available())}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"CUDA Version:"}\NormalTok{, torch.version.cuda)}
+\ControlFlowTok{if}\NormalTok{ torch.cuda.is\_available():}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{"GPU in Use:"}\NormalTok{, torch.cuda.get\_device\_name(}\DecValTok{0}\NormalTok{))}
+
+\CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+
+\KeywordTok{def}\NormalTok{ build\_mlp(input\_dim, n\_layers, hidden\_units, output\_dim):}
+    \CommentTok{"""Build an MLP with \textasciigrave{}n\_layers\textasciigrave{} hidden linear+ReLU layers and a linear output.}
+
+\CommentTok{    Returns}
+\CommentTok{    {-}{-}{-}{-}{-}{-}{-}}
+\CommentTok{    nn.Module}
+\CommentTok{        The constructed MLP.}
+\CommentTok{    """}
+\NormalTok{    layers }\OperatorTok{=}\NormalTok{ []}
+    \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}5{-}6 lines)}
+
+    \ControlFlowTok{for}\NormalTok{ \_ }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(n\_layers):}
+\NormalTok{        layers }\OperatorTok{+=}\NormalTok{ [nn.Linear(input\_dim,hidden\_units), nn.ReLU()]}
+\NormalTok{        input\_dim }\OperatorTok{=}\NormalTok{ hidden\_units}
+
+    \CommentTok{\#Y\_HAT = nn.Softmax(layers[{-}1]) I think I need to do this somewhere?  like softmax was in the ssignment}
+\NormalTok{    layers }\OperatorTok{+=}\NormalTok{ [nn.Linear(input\_dim, output\_dim)]}
+
+
+    \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+    \ControlFlowTok{return}\NormalTok{ nn.Sequential(}\OperatorTok{*}\NormalTok{layers)}
+
+\KeywordTok{def}\NormalTok{ extract\_model\_params(model):}
+    \CommentTok{"""Extract all parameters of a PyTorch model."""}
+    \ControlFlowTok{return}\NormalTok{ torch.cat([p.view(}\OperatorTok{{-}}\DecValTok{1}\NormalTok{) }\ControlFlowTok{for}\NormalTok{ p }\KeywordTok{in}\NormalTok{ model.parameters() }\ControlFlowTok{if}\NormalTok{ p.requires\_grad])}
+
+\KeywordTok{def}\NormalTok{ load\_params\_into\_model(model, all\_params):}
+    \CommentTok{"""Loads a flattened array of parameters back into a PyTorch model."""}
+\NormalTok{    current\_pos }\OperatorTok{=} \DecValTok{0}
+    \ControlFlowTok{for}\NormalTok{ param }\KeywordTok{in}\NormalTok{ model.parameters():}
+        \ControlFlowTok{if}\NormalTok{ param.requires\_grad:}
+\NormalTok{            num\_params }\OperatorTok{=}\NormalTok{ param.numel()}
+            \CommentTok{\# Reshape the flattened parameters to the original shape of the parameter}
+\NormalTok{            param.data.copy\_(all\_params[current\_pos : current\_pos }\OperatorTok{+}\NormalTok{ num\_params].view(param.size()))}
+\NormalTok{            current\_pos }\OperatorTok{+=}\NormalTok{ num\_params}
+
+\KeywordTok{def}\NormalTok{ train\_epoch(model, loader, criterion, optimizer):}
+\NormalTok{    model.train()}
+\NormalTok{    running\_loss }\OperatorTok{=} \FloatTok{0.0}
+    \ControlFlowTok{for}\NormalTok{ X, y }\KeywordTok{in}\NormalTok{ loader:}
+        \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}5{-}7 lines)}
+
+
+\NormalTok{        optimizer.zero\_grad()}
+\NormalTok{        logits }\OperatorTok{=}\NormalTok{ model(X)}
+\NormalTok{        loss }\OperatorTok{=}\NormalTok{ criterion(logits, y)}
+\NormalTok{        loss.backward()}
+\NormalTok{        optimizer.step()}
+
+
+
+        \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+\NormalTok{        running\_loss }\OperatorTok{+=}\NormalTok{ loss.item() }\OperatorTok{*}\NormalTok{ X.size(}\DecValTok{0}\NormalTok{)}
+
+    \CommentTok{\# Extract and store the model parameters after the epoch}
+\NormalTok{    all\_params }\OperatorTok{=}\NormalTok{ extract\_model\_params(model)}
+
+    \ControlFlowTok{return}\NormalTok{ running\_loss }\OperatorTok{/} \BuiltInTok{len}\NormalTok{(loader.dataset), all\_params.detach().cpu().numpy()}
+
+
+\KeywordTok{def}\NormalTok{ evaluate(model, loader):}
+\NormalTok{    model.}\BuiltInTok{eval}\NormalTok{()}
+\NormalTok{    correct }\OperatorTok{=} \DecValTok{0}
+\NormalTok{    total }\OperatorTok{=} \DecValTok{0}
+    \ControlFlowTok{with}\NormalTok{ torch.no\_grad():}
+        \ControlFlowTok{for}\NormalTok{ X, y }\KeywordTok{in}\NormalTok{ loader:}
+            \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}4 lines)}
+
+\NormalTok{            logits }\OperatorTok{=}\NormalTok{ model(X)}
+\NormalTok{            preds }\OperatorTok{=}\NormalTok{ torch.argmax(logits, dim}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{            correct }\OperatorTok{+=}\NormalTok{ (preds }\OperatorTok{==}\NormalTok{ y).}\BuiltInTok{sum}\NormalTok{().item()}
+\NormalTok{            total }\OperatorTok{+=}\NormalTok{ y.size(}\DecValTok{0}\NormalTok{)}
+
+
+
+            \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+
+    \ControlFlowTok{return}\NormalTok{ correct }\OperatorTok{/}\NormalTok{ total}
+
+
+\KeywordTok{def}\NormalTok{ compute\_loss(model, loader, criterion):}
+\NormalTok{    running\_loss }\OperatorTok{=} \FloatTok{0.0}
+    \ControlFlowTok{for}\NormalTok{ X, y }\KeywordTok{in}\NormalTok{ loader:}
+        \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}3 lines)}
+        \ControlFlowTok{with}\NormalTok{ torch.no\_grad():}
+\NormalTok{            logits }\OperatorTok{=}\NormalTok{ model(X)}
+\NormalTok{            loss }\OperatorTok{=}\NormalTok{ criterion(logits, y)}
+\NormalTok{            running\_loss }\OperatorTok{+=}\NormalTok{ loss.item() }\OperatorTok{*}\NormalTok{ X.size(}\DecValTok{0}\NormalTok{)}
+
+        \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+    \ControlFlowTok{return}\NormalTok{ running\_loss }\OperatorTok{/} \BuiltInTok{len}\NormalTok{(loader.dataset)}
+
+\CommentTok{\# Load data (numpy arrays assumed present in workspace)}
+\NormalTok{X\_train }\OperatorTok{=}\NormalTok{ np.load(}\StringTok{"fashion\_mnist\_train\_images.npy"}\NormalTok{).astype(np.float32) }\OperatorTok{/} \FloatTok{255.0}
+\NormalTok{y\_train }\OperatorTok{=}\NormalTok{ np.load(}\StringTok{"fashion\_mnist\_train\_labels.npy"}\NormalTok{).astype(np.int64)}
+\NormalTok{X\_test }\OperatorTok{=}\NormalTok{ np.load(}\StringTok{"fashion\_mnist\_test\_images.npy"}\NormalTok{).astype(np.float32) }\OperatorTok{/} \FloatTok{255.0}
+\NormalTok{y\_test }\OperatorTok{=}\NormalTok{ np.load(}\StringTok{"fashion\_mnist\_test\_labels.npy"}\NormalTok{).astype(np.int64)}
+
+\CommentTok{\# Flatten if images are HxW}
+\ControlFlowTok{if}\NormalTok{ X\_train.ndim }\OperatorTok{==} \DecValTok{3}\NormalTok{:}
+\NormalTok{    X\_train }\OperatorTok{=}\NormalTok{ X\_train.reshape(X\_train.shape[}\DecValTok{0}\NormalTok{], }\OperatorTok{{-}}\DecValTok{1}\NormalTok{)}
+\NormalTok{    X\_test }\OperatorTok{=}\NormalTok{ X\_test.reshape(X\_test.shape[}\DecValTok{0}\NormalTok{], }\OperatorTok{{-}}\DecValTok{1}\NormalTok{)}
+
+\CommentTok{\# center data similarly to previous versions}
+\NormalTok{X\_train }\OperatorTok{=}\NormalTok{ X\_train }\OperatorTok{{-}} \FloatTok{0.5}
+\NormalTok{X\_test }\OperatorTok{=}\NormalTok{ X\_test }\OperatorTok{{-}} \FloatTok{0.5}
+
+\CommentTok{\# Convert to tensors}
+\NormalTok{X\_train\_t }\OperatorTok{=}\NormalTok{ torch.from\_numpy(X\_train)}
+\NormalTok{y\_train\_t }\OperatorTok{=}\NormalTok{ torch.from\_numpy(y\_train)}
+\NormalTok{X\_test\_t }\OperatorTok{=}\NormalTok{ torch.from\_numpy(X\_test)}
+\NormalTok{y\_test\_t }\OperatorTok{=}\NormalTok{ torch.from\_numpy(y\_test)}
+
+\CommentTok{\# SEED FIX}
+\NormalTok{torch.manual\_seed(}\DecValTok{541}\NormalTok{)}
+\NormalTok{np.random.seed(}\DecValTok{541}\NormalTok{)}
+
+\CommentTok{\# Train/val split}
+\NormalTok{full\_train }\OperatorTok{=}\NormalTok{ TensorDataset(X\_train\_t, y\_train\_t)}
+\NormalTok{val\_size }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(}\FloatTok{0.2} \OperatorTok{*} \BuiltInTok{len}\NormalTok{(full\_train))}
+\NormalTok{train\_size }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(full\_train) }\OperatorTok{{-}}\NormalTok{ val\_size}
+\NormalTok{train\_dataset, val\_dataset }\OperatorTok{=}\NormalTok{ random\_split(full\_train, [train\_size, val\_size])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
 \item
   (5 points) Implement a method called \textbf{hyperparam\_tuning}.
   Optimize the hyperparameters by training on the training set and
@@ -581,6 +737,146 @@ The Fashion MNIST dataset can be obtained from the following web links:
     2, you should fork off part of the training set into a validation
     portion.
   \end{itemize}
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-4}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#| label: prob2\_2}
+
+\KeywordTok{def}\NormalTok{ hyperparam\_tuning(train\_dataset, val\_dataset, seed}\OperatorTok{=}\DecValTok{541}\NormalTok{):}
+    \CommentTok{"""Systematically search hyperparameters and return the best config and model state.}
+
+\CommentTok{    Returns}
+\CommentTok{    {-}{-}{-}{-}{-}{-}{-}}
+\CommentTok{    dict, state\_dict}
+\CommentTok{        Best hyperparameters and the corresponding model state dict.}
+\CommentTok{    """}
+\NormalTok{    torch.manual\_seed(seed)}
+\NormalTok{    np.random.seed(seed)}
+
+\NormalTok{    best\_cfg }\OperatorTok{=} \VariableTok{None}
+\NormalTok{    best\_acc }\OperatorTok{=} \FloatTok{0.0}
+    \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}15{-}20 lines)}
+
+
+\NormalTok{    batch\_sizes }\OperatorTok{=}\NormalTok{ [}\DecValTok{8}\NormalTok{,}\DecValTok{12}\NormalTok{,}\DecValTok{16}\NormalTok{,}\DecValTok{20}\NormalTok{,}\DecValTok{32}\NormalTok{,}\DecValTok{48}\NormalTok{,}\DecValTok{64}\NormalTok{,}\DecValTok{128}\NormalTok{,}\DecValTok{145}\NormalTok{,}\DecValTok{256}\NormalTok{]}
+\NormalTok{    learning\_rates}\OperatorTok{=}\NormalTok{ [}\FloatTok{0.01}\NormalTok{,}\FloatTok{0.005}\NormalTok{,}\FloatTok{0.001}\NormalTok{,}\FloatTok{0.0005}\NormalTok{,}\FloatTok{0.0001}\NormalTok{,}\FloatTok{0.00005}\NormalTok{,}\FloatTok{0.00001}\NormalTok{]}
+\NormalTok{    layers }\OperatorTok{=}\NormalTok{ [}\DecValTok{2}\NormalTok{,}\DecValTok{3}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{5}\NormalTok{,}\DecValTok{6}\NormalTok{]}
+\NormalTok{    hidden }\OperatorTok{=}\NormalTok{ [}\DecValTok{5}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{20}\NormalTok{,}\DecValTok{30}\NormalTok{,}\DecValTok{40}\NormalTok{]}
+\NormalTok{    alphas }\OperatorTok{=}\NormalTok{ [}\DecValTok{0}\NormalTok{,}\FloatTok{0.0005}\NormalTok{,}\FloatTok{0.001}\NormalTok{,}\FloatTok{0.0001}\NormalTok{,}\FloatTok{0.00001}\NormalTok{]}
+\NormalTok{    epochs }\OperatorTok{=}\NormalTok{ [}\DecValTok{15}\NormalTok{, }\DecValTok{20}\NormalTok{, }\DecValTok{25}\NormalTok{]}
+
+
+    \CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\NormalTok{    x0, y0 }\OperatorTok{=}\NormalTok{ train\_dataset[}\DecValTok{0}\NormalTok{]}
+\NormalTok{    n\_features }\OperatorTok{=}\NormalTok{ x0.numel()}
+\NormalTok{    n\_classes  }\OperatorTok{=} \DecValTok{10}
+    \CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#3}
+
+
+\NormalTok{    loopcount }\OperatorTok{=} \DecValTok{0}
+
+\NormalTok{    config\_attempts }\OperatorTok{=} \DecValTok{50}
+
+
+
+    \ControlFlowTok{for}\NormalTok{ \_ }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(config\_attempts):}
+
+
+\NormalTok{        layer\_choice }\OperatorTok{=}  \BuiltInTok{int}\NormalTok{(np.random.choice(layers).item())}
+\NormalTok{        batch\_size\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(batch\_sizes).item())}
+\NormalTok{        learning\_rate\_choice }\OperatorTok{=}\BuiltInTok{float}\NormalTok{(np.random.choice(learning\_rates).item())}
+\NormalTok{        hidden\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(hidden).item())}
+\NormalTok{        aplha\_choice }\OperatorTok{=} \BuiltInTok{float}\NormalTok{(np.random.choice(alphas).item())}
+\NormalTok{        epoch\_choices }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(epochs).item())}
+
+\NormalTok{        train\_loader }\OperatorTok{=}\NormalTok{ DataLoader(train\_dataset, batch\_size}\OperatorTok{=}\NormalTok{batch\_size\_choice, shuffle}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{        val\_loader   }\OperatorTok{=}\NormalTok{ DataLoader(val\_dataset,   batch\_size}\OperatorTok{=}\NormalTok{batch\_size\_choice, shuffle}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+
+        \CommentTok{\# SEED FIX}
+\NormalTok{        torch.manual\_seed(seed }\OperatorTok{+}\NormalTok{ loopcount)}
+\NormalTok{        model }\OperatorTok{=}\NormalTok{ build\_mlp(n\_features, layer\_choice,hidden\_choice, n\_classes)}
+\NormalTok{        criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
+
+        \CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\# }
+
+
+\NormalTok{        weight\_params }\OperatorTok{=}\NormalTok{[]}
+\NormalTok{        bias\_params }\OperatorTok{=}\NormalTok{ []}
+        \ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ model.named\_parameters():}
+\NormalTok{            (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
+\NormalTok{        optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: aplha\_choice\},\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params,   }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}],lr}\OperatorTok{=}\NormalTok{learning\_rate\_choice)}
+
+
+
+
+        \CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+
+        \ControlFlowTok{for}\NormalTok{ \_e }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epoch\_choices):}
+\NormalTok{            train\_epoch(model, train\_loader, criterion, optimizer)}
+
+\NormalTok{        current\_accuracy }\OperatorTok{=}\NormalTok{ evaluate(model, val\_loader)}
+
+        \CommentTok{\# sanity check to see what loop im on and to ensure its not like frozen}
+\NormalTok{        loopcount }\OperatorTok{=}\NormalTok{ loopcount }\OperatorTok{+}\DecValTok{1}
+        \CommentTok{\#print("on loop ", loopcount)\# turned off for final output}
+
+        \ControlFlowTok{if}\NormalTok{ current\_accuracy }\OperatorTok{\textgreater{}}\NormalTok{ best\_acc:}
+\NormalTok{            best\_acc }\OperatorTok{=}\NormalTok{ current\_accuracy}
+            \BuiltInTok{print}\NormalTok{(}\StringTok{"best accuracy "}\NormalTok{,best\_acc)}
+            \CommentTok{\#best\_configs = [layer\_choice , batch\_size\_choice , learning\_rate\_choice, hidden\_choice , aplha\_choice , epoch\_choices]}
+
+\NormalTok{            best\_cfg }\OperatorTok{=}\NormalTok{ \{}
+                    \StringTok{"layers"}\NormalTok{: layer\_choice,}
+                    \StringTok{"hidden"}\NormalTok{: hidden\_choice,}
+                    \StringTok{"batch"}\NormalTok{: batch\_size\_choice,}
+                    \StringTok{"learning\_rate"}\NormalTok{: learning\_rate\_choice,}
+                    \StringTok{"alpha"}\NormalTok{: aplha\_choice,}
+                    \StringTok{"epochs"}\NormalTok{: epoch\_choices,}
+                    \StringTok{"seed"}\NormalTok{: seed }\OperatorTok{+}\NormalTok{ loopcount }\OperatorTok{{-}} \DecValTok{1}  \CommentTok{\# SEED FIX}
+\NormalTok{                \}}
+
+            \BuiltInTok{print}\NormalTok{(}\StringTok{"New best:"}\NormalTok{, best\_cfg, }\StringTok{"val\_acc="}\NormalTok{, }\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{best\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
+
+
+
+    \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+
+    \ControlFlowTok{return}\NormalTok{ best\_cfg, best\_acc}
+
+
+\CommentTok{\# Run hyperparameter tuning}
+\NormalTok{best\_cfg, best\_acc }\OperatorTok{=}\NormalTok{ hyperparam\_tuning(train\_dataset, val\_dataset)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Best config: }\SpecialCharTok{\{}\NormalTok{best\_cfg}\SpecialCharTok{\}}\SpecialStringTok{ with val\_acc=}\SpecialCharTok{\{}\NormalTok{best\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
+
+\end{Highlighting}
+\end{Shaded}
+
+\phantomsection\label{prob2_2}
+\begin{verbatim}
+best accuracy  0.2663333333333333
+New best: {'layers': 2, 'hidden': 5, 'batch': 20, 'learning_rate': 0.0001, 'alpha': 1e-05, 'epochs': 20, 'seed': 541} val_acc= 0.2663
+best accuracy  0.2911666666666667
+New best: {'layers': 6, 'hidden': 5, 'batch': 20, 'learning_rate': 0.001, 'alpha': 0.0005, 'epochs': 25, 'seed': 544} val_acc= 0.2912
+best accuracy  0.85925
+New best: {'layers': 4, 'hidden': 40, 'batch': 8, 'learning_rate': 0.001, 'alpha': 0.0001, 'epochs': 25, 'seed': 548} val_acc= 0.8592
+best accuracy  0.8629166666666667
+New best: {'layers': 4, 'hidden': 20, 'batch': 16, 'learning_rate': 0.005, 'alpha': 0.0005, 'epochs': 25, 'seed': 564} val_acc= 0.8629
+best accuracy  0.87725
+New best: {'layers': 3, 'hidden': 40, 'batch': 16, 'learning_rate': 0.01, 'alpha': 0.001, 'epochs': 25, 'seed': 576} val_acc= 0.8772
+Best config: {'layers': 3, 'hidden': 40, 'batch': 16, 'learning_rate': 0.01, 'alpha': 0.001, 'epochs': 25, 'seed': 576} with val_acc=0.8772
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
 \item
   (4 points) After you have optimized your hyperparameters, then
   re-train your network again and show a screenshot displaying the
@@ -590,6 +886,80 @@ The Fashion MNIST dataset can be obtained from the following web links:
   \textbf{test accuracy} of the final trained classifier. The accuracy
   (percentage correctly classified test images) should be \textbf{at
   least 87\%}.
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-5}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\end{Highlighting}
+\end{Shaded}
+
+\phantomsection\label{prob2_3}
+\begin{verbatim}
+Final Train Epoch 1/50: loss=1.0717, test_acc=0.7680, time=4.7s
+Final Train Epoch 2/50: loss=0.5385, test_acc=0.8125, time=4.8s
+Final Train Epoch 3/50: loss=0.4607, test_acc=0.8287, time=4.8s
+Final Train Epoch 4/50: loss=0.4252, test_acc=0.8376, time=4.8s
+Final Train Epoch 5/50: loss=0.4013, test_acc=0.8472, time=4.8s
+Final Train Epoch 6/50: loss=0.3842, test_acc=0.8484, time=4.8s
+Final Train Epoch 7/50: loss=0.3693, test_acc=0.8541, time=4.7s
+Final Train Epoch 8/50: loss=0.3564, test_acc=0.8619, time=4.7s
+Final Train Epoch 9/50: loss=0.3480, test_acc=0.8578, time=4.7s
+Final Train Epoch 10/50: loss=0.3390, test_acc=0.8604, time=4.7s
+Final Train Epoch 11/50: loss=0.3320, test_acc=0.8555, time=4.7s
+Final Train Epoch 12/50: loss=0.3253, test_acc=0.8678, time=4.7s
+Final Train Epoch 13/50: loss=0.3207, test_acc=0.8588, time=4.7s
+Final Train Epoch 14/50: loss=0.3159, test_acc=0.8644, time=4.6s
+Final Train Epoch 15/50: loss=0.3112, test_acc=0.8685, time=4.8s
+Final Train Epoch 16/50: loss=0.3073, test_acc=0.8704, time=4.7s
+Final Train Epoch 17/50: loss=0.3050, test_acc=0.8697, time=4.7s
+Final Train Epoch 18/50: loss=0.3017, test_acc=0.8724, time=4.7s
+Final Train Epoch 19/50: loss=0.2978, test_acc=0.8691, time=4.7s
+Final Train Epoch 20/50: loss=0.2945, test_acc=0.8611, time=4.7s
+Final Train Epoch 21/50: loss=0.2922, test_acc=0.8697, time=4.7s
+Final Train Epoch 22/50: loss=0.2905, test_acc=0.8685, time=4.8s
+Final Train Epoch 23/50: loss=0.2876, test_acc=0.8646, time=4.7s
+Final Train Epoch 24/50: loss=0.2843, test_acc=0.8659, time=4.7s
+Final Train Epoch 25/50: loss=0.2840, test_acc=0.8721, time=4.7s
+Final Train Epoch 26/50: loss=0.2806, test_acc=0.8657, time=4.7s
+Final Train Epoch 27/50: loss=0.2793, test_acc=0.8697, time=4.7s
+Final Train Epoch 28/50: loss=0.2769, test_acc=0.8676, time=4.8s
+Final Train Epoch 29/50: loss=0.2758, test_acc=0.8686, time=4.7s
+Final Train Epoch 30/50: loss=0.2732, test_acc=0.8696, time=4.7s
+Final Train Epoch 31/50: loss=0.2720, test_acc=0.8731, time=4.8s
+Final Train Epoch 32/50: loss=0.2709, test_acc=0.8744, time=4.7s
+Final Train Epoch 33/50: loss=0.2692, test_acc=0.8774, time=4.8s
+Final Train Epoch 34/50: loss=0.2670, test_acc=0.8681, time=4.8s
+Final Train Epoch 35/50: loss=0.2660, test_acc=0.8691, time=4.8s
+Final Train Epoch 36/50: loss=0.2650, test_acc=0.8712, time=4.7s
+Final Train Epoch 37/50: loss=0.2637, test_acc=0.8752, time=4.7s
+Final Train Epoch 38/50: loss=0.2608, test_acc=0.8677, time=4.7s
+Final Train Epoch 39/50: loss=0.2597, test_acc=0.8696, time=4.8s
+Final Train Epoch 40/50: loss=0.2588, test_acc=0.8637, time=4.7s
+Final Train Epoch 41/50: loss=0.2592, test_acc=0.8771, time=4.8s
+Final Train Epoch 42/50: loss=0.2562, test_acc=0.8731, time=4.7s
+Final Train Epoch 43/50: loss=0.2552, test_acc=0.8673, time=4.7s
+Final Train Epoch 44/50: loss=0.2545, test_acc=0.8758, time=4.7s
+Final Train Epoch 45/50: loss=0.2531, test_acc=0.8745, time=4.7s
+Final Train Epoch 46/50: loss=0.2518, test_acc=0.8773, time=4.7s
+Final Train Epoch 47/50: loss=0.2528, test_acc=0.8745, time=4.8s
+Final Train Epoch 48/50: loss=0.2503, test_acc=0.8786, time=4.8s
+Final Train Epoch 49/50: loss=0.2505, test_acc=0.8831, time=4.7s
+Final Train Epoch 50/50: loss=0.2494, test_acc=0.8771, time=4.7s
+Length of parameter history: 50
+Final Test Accuracy: 0.8771
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
 \item
   (2 bonus points) Now you have to experiment with a variant of the
   previous network that includes either \textbf{BatchNorm, Dropout
@@ -597,6 +967,78 @@ The Fashion MNIST dataset can be obtained from the following web links:
   ELU or PReLU). Find an architecture that outperforms the one you found
   in item 3 and report the test accuracy.
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-6}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\end{Highlighting}
+\end{Shaded}
+
+\phantomsection\label{prob2_4}
+\begin{verbatim}
+best enhanced accuracy  0.7305833333333334
+New best enhanced: {'layers': 5, 'hidden': 64, 'batch': 32, 'learning_rate': 0.001, 'alpha': 0.0001, 'epochs': 30, 'batchnorm': False, 'dropout': 0.0, 'activation': np.str_('relu'), 'seed': 541} val_acc= 0.7306
+best enhanced accuracy  0.8628333333333333
+New best enhanced: {'layers': 4, 'hidden': 64, 'batch': 64, 'learning_rate': 0.001, 'alpha': 0.0, 'epochs': 30, 'batchnorm': True, 'dropout': 0.2, 'activation': np.str_('leaky'), 'seed': 542} val_acc= 0.8628
+best enhanced accuracy  0.8870833333333333
+New best enhanced: {'layers': 4, 'hidden': 256, 'batch': 32, 'learning_rate': 0.001, 'alpha': 0.0001, 'epochs': 30, 'batchnorm': True, 'dropout': 0.2, 'activation': np.str_('relu'), 'seed': 546} val_acc= 0.8871
+Enhanced config: {'layers': 4, 'hidden': 256, 'batch': 32, 'learning_rate': 0.001, 'alpha': 0.0001, 'epochs': 30, 'batchnorm': True, 'dropout': 0.2, 'activation': np.str_('relu'), 'seed': 546} with val_acc=0.8871
+Enhanced Train Epoch 1/50: loss=1.2671, test_acc=0.7679, time=6.5s
+Enhanced Train Epoch 2/50: loss=0.7456, test_acc=0.8083, time=6.6s
+Enhanced Train Epoch 3/50: loss=0.6332, test_acc=0.8228, time=6.7s
+Enhanced Train Epoch 4/50: loss=0.5770, test_acc=0.8362, time=6.6s
+Enhanced Train Epoch 5/50: loss=0.5371, test_acc=0.8431, time=6.6s
+Enhanced Train Epoch 6/50: loss=0.5169, test_acc=0.8469, time=6.6s
+Enhanced Train Epoch 7/50: loss=0.4968, test_acc=0.8538, time=6.7s
+Enhanced Train Epoch 8/50: loss=0.4827, test_acc=0.8537, time=6.7s
+Enhanced Train Epoch 9/50: loss=0.4686, test_acc=0.8581, time=6.6s
+Enhanced Train Epoch 10/50: loss=0.4560, test_acc=0.8632, time=6.6s
+Enhanced Train Epoch 11/50: loss=0.4433, test_acc=0.8652, time=6.6s
+Enhanced Train Epoch 12/50: loss=0.4379, test_acc=0.8675, time=6.7s
+Enhanced Train Epoch 13/50: loss=0.4283, test_acc=0.8687, time=6.6s
+Enhanced Train Epoch 14/50: loss=0.4193, test_acc=0.8693, time=6.6s
+Enhanced Train Epoch 15/50: loss=0.4168, test_acc=0.8711, time=6.6s
+Enhanced Train Epoch 16/50: loss=0.4093, test_acc=0.8707, time=6.6s
+Enhanced Train Epoch 17/50: loss=0.3988, test_acc=0.8725, time=6.7s
+Enhanced Train Epoch 18/50: loss=0.3958, test_acc=0.8720, time=6.6s
+Enhanced Train Epoch 19/50: loss=0.3882, test_acc=0.8755, time=6.6s
+Enhanced Train Epoch 20/50: loss=0.3888, test_acc=0.8753, time=6.6s
+Enhanced Train Epoch 21/50: loss=0.3835, test_acc=0.8776, time=6.7s
+Enhanced Train Epoch 22/50: loss=0.3776, test_acc=0.8773, time=6.7s
+Enhanced Train Epoch 23/50: loss=0.3708, test_acc=0.8798, time=7.2s
+Enhanced Train Epoch 24/50: loss=0.3676, test_acc=0.8800, time=7.9s
+Enhanced Train Epoch 25/50: loss=0.3650, test_acc=0.8805, time=8.3s
+Enhanced Train Epoch 26/50: loss=0.3622, test_acc=0.8797, time=7.4s
+Enhanced Train Epoch 27/50: loss=0.3569, test_acc=0.8812, time=6.6s
+Enhanced Train Epoch 28/50: loss=0.3499, test_acc=0.8809, time=6.5s
+Enhanced Train Epoch 29/50: loss=0.3502, test_acc=0.8807, time=6.6s
+Enhanced Train Epoch 30/50: loss=0.3498, test_acc=0.8821, time=6.7s
+Enhanced Train Epoch 31/50: loss=0.3425, test_acc=0.8829, time=6.6s
+Enhanced Train Epoch 32/50: loss=0.3408, test_acc=0.8832, time=6.8s
+Enhanced Train Epoch 33/50: loss=0.3381, test_acc=0.8846, time=7.9s
+Enhanced Train Epoch 34/50: loss=0.3344, test_acc=0.8848, time=7.0s
+Enhanced Train Epoch 35/50: loss=0.3333, test_acc=0.8828, time=6.6s
+Enhanced Train Epoch 36/50: loss=0.3335, test_acc=0.8841, time=6.9s
+Enhanced Train Epoch 37/50: loss=0.3265, test_acc=0.8831, time=7.1s
+Enhanced Train Epoch 38/50: loss=0.3285, test_acc=0.8848, time=6.7s
+Enhanced Train Epoch 39/50: loss=0.3232, test_acc=0.8856, time=6.7s
+Enhanced Train Epoch 40/50: loss=0.3217, test_acc=0.8849, time=6.6s
+Enhanced Train Epoch 41/50: loss=0.3184, test_acc=0.8852, time=6.8s
+Enhanced Train Epoch 42/50: loss=0.3178, test_acc=0.8864, time=6.8s
+Enhanced Train Epoch 43/50: loss=0.3144, test_acc=0.8849, time=6.9s
+Enhanced Train Epoch 44/50: loss=0.3100, test_acc=0.8867, time=6.7s
+Enhanced Train Epoch 45/50: loss=0.3096, test_acc=0.8876, time=6.7s
+Enhanced Train Epoch 46/50: loss=0.3079, test_acc=0.8879, time=6.6s
+Enhanced Train Epoch 47/50: loss=0.3060, test_acc=0.8881, time=6.6s
+Enhanced Train Epoch 48/50: loss=0.3030, test_acc=0.8856, time=6.7s
+Enhanced Train Epoch 49/50: loss=0.3004, test_acc=0.8879, time=6.8s
+Enhanced Train Epoch 50/50: loss=0.2979, test_acc=0.8868, time=6.6s
+Final Enhanced Test Accuracy: 0.8868
+\end{verbatim}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -632,13 +1074,28 @@ MNIST:
   particular the \texttt{plotPath} function, for an example of 3-D
   plotting. Submit your graph in the PDF file and the code in the Python
   file.
-
-  Here is what I get when I superimpose two scatter plots corresponding
-  to two different initializations and SGD runs (note that you only need
-  to include a scatter plot for one run); as you can see, the two SGD
-  trajectories descended into distinct local minima (though with similar
-  cost):
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-7}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{CS541_HW3_git_files/figure-latex/cs541_hw3_p2-3_d1a-prob3-output-1.png}
+
+}
+
+\caption{Visualization of the loss landscape and optimization
+trajectory.}
+
+\end{figure}%
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -671,11 +1128,11 @@ point)}\label{task-1-data-preparation-2-point}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{Answer}\label{answer-3}
+\subsection{Answer}\label{answer-8}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Task 1: Load Fashion{-}MNIST, convert to tensors in [0,1], make DataLoaders.}
+\CommentTok{\# Task 1}
 
 \KeywordTok{def}\NormalTok{ prepare\_data(batch\_size: }\BuiltInTok{int} \OperatorTok{=} \DecValTok{128}\NormalTok{):}
 \NormalTok{    transform }\OperatorTok{=}\NormalTok{ transforms.ToTensor()  }\CommentTok{\# 28x28 grayscale {-}\textgreater{} float tensor in [0,1]}
@@ -758,11 +1215,11 @@ architecture:
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{Answer}\label{answer-4}
+\subsection{Answer}\label{answer-9}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Task 2: Dense autoencoder. Encoder: 784{-}\textgreater{}128{-}\textgreater{}64. Decoder: 64{-}\textgreater{}128{-}\textgreater{}784 with Sigmoid.}
+\CommentTok{\# Task 2}
 
 \KeywordTok{class}\NormalTok{ Autoencoder(nn.Module):}
     \KeywordTok{def} \FunctionTok{\_\_init\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{):}
@@ -829,11 +1286,11 @@ points)}\label{task-3-model-training-6-points}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{Answer}\label{answer-5}
+\subsection{Answer}\label{answer-10}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Task 3: Train for 20 epochs with MSE loss and Adam.}
+\CommentTok{\# Task 3}
 
 \KeywordTok{def}\NormalTok{ train\_autoencoder(model: nn.Module, loader: DataLoader, epochs: }\BuiltInTok{int} \OperatorTok{=} \DecValTok{20}\NormalTok{, lr: }\BuiltInTok{float} \OperatorTok{=} \FloatTok{1e{-}3}\NormalTok{):}
 \NormalTok{    device }\OperatorTok{=}\NormalTok{ torch.device(}\StringTok{"cuda"} \ControlFlowTok{if}\NormalTok{ torch.cuda.is\_available() }\ControlFlowTok{else} \StringTok{"cpu"}\NormalTok{)}
@@ -1020,11 +1477,11 @@ points)}\label{task-4-visualizing-reconstructions-6-points}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{Answer}\label{answer-6}
+\subsection{Answer}\label{answer-11}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Task 4: Eval mode, pass a test batch, show 2 originals (top) and 2 reconstructions (bottom).}
+\CommentTok{\# Task 4}
 
 \KeywordTok{def}\NormalTok{ visualize\_reconstructions(model: nn.Module, test\_loader: DataLoader, num\_images: }\BuiltInTok{int} \OperatorTok{=} \DecValTok{2}\NormalTok{):}
 \NormalTok{    model.}\BuiltInTok{eval}\NormalTok{()}

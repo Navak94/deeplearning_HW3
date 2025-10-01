@@ -263,6 +263,157 @@ The Fashion MNIST dataset can be obtained from the following web links:
 
 1.  (6 points) Implement the same network using PyTorch or Tensorflow.
 
+---
+
+## Answer
+
+```python
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader, random_split
+import matplotlib.pyplot as plt
+import tqdm
+
+
+###############################################################################
+
+print("sees CUDA device:", torch.cuda.is_available())
+print("CUDA Version:", torch.version.cuda)
+if torch.cuda.is_available():
+    print("GPU in Use:", torch.cuda.get_device_name(0))
+
+###############################################################################
+
+def build_mlp(input_dim, n_layers, hidden_units, output_dim):
+    """Build an MLP with `n_layers` hidden linear+ReLU layers and a linear output.
+
+    Returns
+    -------
+    nn.Module
+        The constructed MLP.
+    """
+    layers = []
+    # BEGIN YOUR CODE HERE (~5-6 lines)
+
+    for _ in range(n_layers):
+        layers += [nn.Linear(input_dim,hidden_units), nn.ReLU()]
+        input_dim = hidden_units
+
+    #Y_HAT = nn.Softmax(layers[-1]) I think I need to do this somewhere?  like softmax was in the ssignment
+    layers += [nn.Linear(input_dim, output_dim)]
+
+
+    # END YOUR CODE HERE
+    return nn.Sequential(*layers)
+
+def extract_model_params(model):
+    """Extract all parameters of a PyTorch model."""
+    return torch.cat([p.view(-1) for p in model.parameters() if p.requires_grad])
+
+def load_params_into_model(model, all_params):
+    """Loads a flattened array of parameters back into a PyTorch model."""
+    current_pos = 0
+    for param in model.parameters():
+        if param.requires_grad:
+            num_params = param.numel()
+            # Reshape the flattened parameters to the original shape of the parameter
+            param.data.copy_(all_params[current_pos : current_pos + num_params].view(param.size()))
+            current_pos += num_params
+
+def train_epoch(model, loader, criterion, optimizer):
+    model.train()
+    running_loss = 0.0
+    for X, y in loader:
+        # BEGIN YOUR CODE HERE (~5-7 lines)
+
+
+        optimizer.zero_grad()
+        logits = model(X)
+        loss = criterion(logits, y)
+        loss.backward()
+        optimizer.step()
+
+
+
+        # END YOUR CODE HERE
+        running_loss += loss.item() * X.size(0)
+
+    # Extract and store the model parameters after the epoch
+    all_params = extract_model_params(model)
+
+    return running_loss / len(loader.dataset), all_params.detach().cpu().numpy()
+
+
+def evaluate(model, loader):
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for X, y in loader:
+            # BEGIN YOUR CODE HERE (~4 lines)
+
+            logits = model(X)
+            preds = torch.argmax(logits, dim=1)
+            correct += (preds == y).sum().item()
+            total += y.size(0)
+
+
+
+            # END YOUR CODE HERE
+
+    return correct / total
+
+
+def compute_loss(model, loader, criterion):
+    running_loss = 0.0
+    for X, y in loader:
+        # BEGIN YOUR CODE HERE (~3 lines)
+        with torch.no_grad():
+            logits = model(X)
+            loss = criterion(logits, y)
+            running_loss += loss.item() * X.size(0)
+
+        # END YOUR CODE HERE
+    return running_loss / len(loader.dataset)
+
+# Load data (numpy arrays assumed present in workspace)
+X_train = np.load("fashion_mnist_train_images.npy").astype(np.float32) / 255.0
+y_train = np.load("fashion_mnist_train_labels.npy").astype(np.int64)
+X_test = np.load("fashion_mnist_test_images.npy").astype(np.float32) / 255.0
+y_test = np.load("fashion_mnist_test_labels.npy").astype(np.int64)
+
+# Flatten if images are HxW
+if X_train.ndim == 3:
+    X_train = X_train.reshape(X_train.shape[0], -1)
+    X_test = X_test.reshape(X_test.shape[0], -1)
+
+# center data similarly to previous versions
+X_train = X_train - 0.5
+X_test = X_test - 0.5
+
+# Convert to tensors
+X_train_t = torch.from_numpy(X_train)
+y_train_t = torch.from_numpy(y_train)
+X_test_t = torch.from_numpy(X_test)
+y_test_t = torch.from_numpy(y_test)
+
+# SEED FIX
+torch.manual_seed(541)
+np.random.seed(541)
+
+# Train/val split
+full_train = TensorDataset(X_train_t, y_train_t)
+val_size = int(0.2 * len(full_train))
+train_size = len(full_train) - val_size
+train_dataset, val_dataset = random_split(full_train, [train_size, val_size])
+
+```
+
+
+
+---
+
 2.  (5 points) Implement a method called **hyperparam\_tuning**. Optimize the hyperparameters by training on the training set and selecting the parameter settings that optimize performance on the validation set. You should systematically (i.e., in code) try at least **10** (in total, not for each hyperparameter) different hyperparameter settings;
     **Hyperparameter tuning:** In this problem, there are several different hyperparameters that will impact the network's performance:
 
@@ -274,11 +425,157 @@ The Fashion MNIST dataset can be obtained from the following web links:
       * $L_{2}$ **Regularization strength** applied to the weight matrices (but not bias terms)
         In order not to "cheat" and thus overestimate the performance of the network it is crucial to optimize the hyperparameters **only on the validation set**; do **not** use the test set. (The training set would be ok, but typically leads to worse performance.) Hence, just like in Homework 2, you should fork off part of the training set into a validation portion.
 
+---
+
+## Answer
+
+```python
+#| label: prob2_2
+
+def hyperparam_tuning(train_dataset, val_dataset, seed=541):
+    """Systematically search hyperparameters and return the best config and model state.
+
+    Returns
+    -------
+    dict, state_dict
+        Best hyperparameters and the corresponding model state dict.
+    """
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
+    best_cfg = None
+    best_acc = 0.0
+    # BEGIN YOUR CODE HERE (~15-20 lines)
+
+
+    batch_sizes = [8,12,16,20,32,48,64,128,145,256]
+    learning_rates= [0.01,0.005,0.001,0.0005,0.0001,0.00005,0.00001]
+    layers = [2,3,4,5,6]
+    hidden = [5,10,20,30,40]
+    alphas = [0,0.0005,0.001,0.0001,0.00001]
+    epochs = [15, 20, 25]
+
+
+    #########################################
+    x0, y0 = train_dataset[0]
+    n_features = x0.numel()
+    n_classes  = 10
+    ##############################################3
+
+
+    loopcount = 0
+
+    config_attempts = 50
+
+
+
+    for _ in range(config_attempts):
+
+
+        layer_choice =  int(np.random.choice(layers).item())
+        batch_size_choice = int(np.random.choice(batch_sizes).item())
+        learning_rate_choice =float(np.random.choice(learning_rates).item())
+        hidden_choice = int(np.random.choice(hidden).item())
+        aplha_choice = float(np.random.choice(alphas).item())
+        epoch_choices = int(np.random.choice(epochs).item())
+
+        train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
+        val_loader   = DataLoader(val_dataset,   batch_size=batch_size_choice, shuffle=False)
+
+        # SEED FIX
+        torch.manual_seed(seed + loopcount)
+        model = build_mlp(n_features, layer_choice,hidden_choice, n_classes)
+        criterion = nn.CrossEntropyLoss()
+
+        ############################################################################# 
+
+
+        weight_params =[]
+        bias_params = []
+        for name, p in model.named_parameters():
+            (weight_params if 'weight' in name else bias_params).append(p)
+        optimizer = torch.optim.SGD([{'params': weight_params, 'weight_decay': aplha_choice},{'params': bias_params,   'weight_decay': 0.0}],lr=learning_rate_choice)
+
+
+
+
+        ################################################################################
+
+        for _e in range(epoch_choices):
+            train_epoch(model, train_loader, criterion, optimizer)
+
+        current_accuracy = evaluate(model, val_loader)
+
+        # sanity check to see what loop im on and to ensure its not like frozen
+        loopcount = loopcount +1
+        #print("on loop ", loopcount)# turned off for final output
+
+        if current_accuracy > best_acc:
+            best_acc = current_accuracy
+            print("best accuracy ",best_acc)
+            #best_configs = [layer_choice , batch_size_choice , learning_rate_choice, hidden_choice , aplha_choice , epoch_choices]
+
+            best_cfg = {
+                    "layers": layer_choice,
+                    "hidden": hidden_choice,
+                    "batch": batch_size_choice,
+                    "learning_rate": learning_rate_choice,
+                    "alpha": aplha_choice,
+                    "epochs": epoch_choices,
+                    "seed": seed + loopcount - 1  # SEED FIX
+                }
+
+            print("New best:", best_cfg, "val_acc=", f"{best_acc:.4f}")
+
+
+
+    # END YOUR CODE HERE
+
+    return best_cfg, best_acc
+
+
+# Run hyperparameter tuning
+best_cfg, best_acc = hyperparam_tuning(train_dataset, val_dataset)
+print(f"Best config: {best_cfg} with val_acc={best_acc:.4f}")
+
+
+```
+
+{{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_2 >}}
+
+
+---
+
 3.  (4 points) After you have optimized your hyperparameters, then re-train your network again and show a screenshot displaying the training loss evolving over the last **20 iterations** of SGD. (You can pick the last 20 mini-batches or last 20 epochs; it's up to you). In addition, make sure your screenshot also displays the **test accuracy** of the final trained classifier. The accuracy (percentage correctly classified test images) should be **at least 87%**.
+
+---
+
+## Answer
+
+```python
+
+```
+
+
+{{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_3 >}}
+
+---
+
 
 4.  (2 bonus points) Now you have to experiment with a variant of the previous network that includes either **BatchNorm, Dropout layers** or **different activation functions** (e.g., LeakyReLU, ELU or PReLU). Find an architecture that outperforms the one you found in item 3 and report the test accuracy.
 
------
+---
+
+## Answer
+
+```python
+
+```
+
+
+{{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_4 >}}
+
+---
 
 # Problem 3: Visualizing the loss landscape and optimization trajectories (15 points)
 
@@ -288,9 +585,20 @@ Visualize the SGD trajectory of your network when trained on Fashion MNIST:
 
 2.  Superimpose a scatter plot of the different points (in the neural network's parameter space) that were reached during SGD (just sample a few times per epoch). To accelerate the rendering, train the network and plot the surface using just a small subset of the training data (e.g., 2500 examples) to estimate $f_{CE}$. See the starter code, in particular the `plotPath` function, for an example of 3-D plotting. Submit your graph in the PDF file and the code in the Python file.
 
-    Here is what I get when I superimpose two scatter plots corresponding to two different initializations and SGD runs (note that you only need to include a scatter plot for one run); as you can see, the two SGD trajectories descended into distinct local minima (though with similar cost):
+---
 
------
+## Answer
+
+```python
+
+```
+
+
+{{< embed cs541_hw3_p2-3_d1a.ipynb#prob3 >}}
+
+---
+
+
 
 # Problem 4: Autoencoder (20 points)
 
@@ -307,7 +615,7 @@ This assignment explores one powerful concept in deep learning: **unsupervised r
 ## Answer
 
 ```python
-# Task 1: Load Fashion-MNIST, convert to tensors in [0,1], make DataLoaders.
+# Task 1
 
 def prepare_data(batch_size: int = 128):
     transform = transforms.ToTensor()  # 28x28 grayscale -> float tensor in [0,1]
@@ -359,7 +667,7 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
 ## Answer
 
 ```python
-# Task 2: Dense autoencoder. Encoder: 784->128->64. Decoder: 64->128->784 with Sigmoid.
+# Task 2
 
 class Autoencoder(nn.Module):
     def __init__(self):
@@ -408,7 +716,7 @@ print(f"- parameters: {params:,}")
 ## Answer
 
 ```python
-# Task 3: Train for 20 epochs with MSE loss and Adam.
+# Task 3
 
 def train_autoencoder(model: nn.Module, loader: DataLoader, epochs: int = 20, lr: float = 1e-3):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -463,7 +771,7 @@ model, losses = train_autoencoder(model, train_loader, epochs=20, lr=1e-3)
 ## Answer
 
 ```python
-# Task 4: Eval mode, pass a test batch, show 2 originals (top) and 2 reconstructions (bottom).
+# Task 4
 
 def visualize_reconstructions(model: nn.Module, test_loader: DataLoader, num_images: int = 2):
     model.eval()
