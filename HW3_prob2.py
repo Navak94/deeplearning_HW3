@@ -144,7 +144,7 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
     x0, y0 = train_dataset[0]
     n_features = x0.numel()
     n_classes  = 10
-##############################################3
+    ##############################################3
 
 
     loopcount = 0
@@ -166,8 +166,10 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
         train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
         val_loader   = DataLoader(val_dataset,   batch_size=batch_size_choice, shuffle=False)
 
+        # SEED FIX: unique seed for each model initialization for reproducibility
+        torch.manual_seed(seed + loopcount)
         model = build_mlp(n_features, layer_choice,hidden_choice, n_classes)
-        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate_choice, weight_decay=aplha_choice)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate_choice, weight_decay=aplha_choice)
         criterion = nn.CrossEntropyLoss()
 
         ############################################################################# needs revision
@@ -204,7 +206,8 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
                     "batch": batch_size_choice,
                     "learning_rate": learning_rate_choice,
                     "alpha": aplha_choice,
-                    "epochs": epoch_choices
+                    "epochs": epoch_choices,
+                    "seed": seed + loopcount - 1  # SEED FIX
                 }
             
             print("New best:", best_cfg, "val_acc=", f"{best_acc:.4f}")
@@ -237,6 +240,10 @@ y_train_t = torch.from_numpy(y_train)
 X_test_t = torch.from_numpy(X_test)
 y_test_t = torch.from_numpy(y_test)
 
+# SEED FIX
+torch.manual_seed(541)
+np.random.seed(541)
+
 # Train/val split
 full_train = TensorDataset(X_train_t, y_train_t)
 val_size = int(0.2 * len(full_train))
@@ -254,6 +261,8 @@ n_classes = int(y_train.max() + 1)
 # Instantiate the best model
 # BEGIN YOUR CODE HERE (~3 lines)
 
+
+torch.manual_seed(best_cfg['seed']) # SEED FIX
 best_model = build_mlp(
     n_features,
     best_cfg['layers'],    
@@ -289,6 +298,168 @@ for epoch in range(epochs_final):
 
 # Print the length of the parameter_history list
 print(f"Length of parameter history: {len(parameter_history)}")
+print(f"Final Test Accuracy: {test_acc:.4f}")
+
+
+
+
+def build_enhanced_mlp(input_dim, n_layers, hidden_units, output_dim, 
+                       use_batchnorm=False, dropout_rate=0.0, activation='relu'):
+    """Build enhanced MLP with optional BatchNorm, Dropout, and different activations."""
+    layers = []
+    
+    activations = {
+        'relu': nn.ReLU(),
+        'leaky': nn.LeakyReLU(0.01),
+        'elu': nn.ELU(),
+        'prelu': nn.PReLU()
+    }
+    act_fn = activations[activation]
+    
+    for i in range(n_layers):
+        layers.append(nn.Linear(input_dim, hidden_units))
+        
+        if use_batchnorm:
+            layers.append(nn.BatchNorm1d(hidden_units))
+        
+        layers.append(act_fn if activation != 'prelu' else nn.PReLU())
+        
+        if dropout_rate > 0:
+            layers.append(nn.Dropout(dropout_rate))
+        
+        input_dim = hidden_units
+    
+    layers.append(nn.Linear(input_dim, output_dim))
+    
+    return nn.Sequential(*layers)
+
+
+def enhanced_hyperparam_tuning(train_dataset, val_dataset, seed=541):
+    """Find best enhanced architecture config."""
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    
+    best_cfg = None
+    best_acc = 0.0
+    
+    batch_sizes = [32, 64, 128]
+    learning_rates = [0.001, 0.0005, 0.0001]
+    layers = [3, 4, 5]
+    hidden = [64, 128, 256]
+    alphas = [0, 0.0001, 0.00001]
+    epochs = [30, 40]
+    
+    use_batchnorm_options = [True, False]
+    dropout_rates = [0.0, 0.2, 0.3, 0.5]
+    activations = ['relu', 'leaky', 'elu', 'prelu']
+    
+    x0, y0 = train_dataset[0]
+    n_features = x0.numel()
+    n_classes = 10
+    
+    loopcount = 0
+    config_attempts = 15
+    
+    for _ in range(config_attempts):
+        
+        layer_choice = int(np.random.choice(layers))
+        batch_size_choice = int(np.random.choice(batch_sizes))
+        learning_rate_choice = float(np.random.choice(learning_rates))
+        hidden_choice = int(np.random.choice(hidden))
+        alpha_choice = float(np.random.choice(alphas))
+        epoch_choice = int(np.random.choice(epochs))
+        use_bn = bool(np.random.choice(use_batchnorm_options))
+        dropout = float(np.random.choice(dropout_rates))
+        activation = np.random.choice(activations)
+        
+        train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size_choice, shuffle=False)
+        
+        torch.manual_seed(seed + loopcount) # SEED FIX
+        model = build_enhanced_mlp(n_features, layer_choice, hidden_choice, n_classes, 
+                                  use_batchnorm=use_bn, dropout_rate=dropout, activation=activation)
+        
+        weight_params = []
+        bias_params = []
+        for name, p in model.named_parameters():
+            (weight_params if 'weight' in name else bias_params).append(p)
+        
+        optimizer = torch.optim.SGD([
+            {'params': weight_params, 'weight_decay': alpha_choice},
+            {'params': bias_params, 'weight_decay': 0.0}
+        ], lr=learning_rate_choice)
+        
+        criterion = nn.CrossEntropyLoss()
+        
+        for _e in range(epoch_choice):
+            train_epoch(model, train_loader, criterion, optimizer)
+        
+        current_accuracy = evaluate(model, val_loader)
+        
+        loopcount = loopcount + 1
+        print("on enhanced loop ", loopcount)
+        
+        if current_accuracy > best_acc:
+            best_acc = current_accuracy
+            print("best enhanced accuracy ", best_acc)
+            
+            best_cfg = {
+                "layers": layer_choice,
+                "hidden": hidden_choice,
+                "batch": batch_size_choice,
+                "learning_rate": learning_rate_choice,
+                "alpha": alpha_choice,
+                "epochs": epoch_choice,
+                "batchnorm": use_bn,
+                "dropout": dropout,
+                "activation": activation,
+                "seed": seed + loopcount - 1  # SEED FIX
+            }
+            
+            print("New best enhanced:", best_cfg, "val_acc=", f"{best_acc:.4f}")
+    
+    return best_cfg, best_acc
+
+
+enhanced_cfg, enhanced_acc = enhanced_hyperparam_tuning(train_dataset, val_dataset)
+print(f"Enhanced config: {enhanced_cfg} with val_acc={enhanced_acc:.4f}")
+
+# Train final enhanced model
+torch.manual_seed(enhanced_cfg['seed']) # SEED FIX
+enhanced_model = build_enhanced_mlp(
+    n_features,
+    enhanced_cfg['layers'],
+    enhanced_cfg['hidden'],
+    n_classes,
+    use_batchnorm=enhanced_cfg['batchnorm'],
+    dropout_rate=enhanced_cfg['dropout'],
+    activation=enhanced_cfg['activation']
+)
+
+batch_size = enhanced_cfg['batch']
+full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
+criterion = nn.CrossEntropyLoss()
+
+weight_params = []
+bias_params = []
+for name, p in enhanced_model.named_parameters():
+    (weight_params if 'weight' in name else bias_params).append(p)
+
+optimizer = torch.optim.SGD([
+    {'params': weight_params, 'weight_decay': enhanced_cfg['alpha']},
+    {'params': bias_params, 'weight_decay': 0.0}
+], lr=enhanced_cfg['learning_rate'])
+
+# retrain enhanced model
+epochs_final = 50
+for epoch in range(epochs_final):
+    t0 = __import__('time').time(); loss, _ = train_epoch(enhanced_model, full_train_loader, criterion, optimizer)
+    test_acc = evaluate(enhanced_model, test_loader); t1 = __import__('time').time()
+    print(f"Enhanced Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
+
+print(f"Final Enhanced Test Accuracy: {test_acc:.4f}")
+
 
 def plotPath(loader, trajectory, model):
     # TODO: change this toy plot to show a 2-d projection of the weight space
