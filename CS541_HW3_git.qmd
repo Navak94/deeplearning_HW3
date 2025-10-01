@@ -9,6 +9,10 @@ format:
        text: |
          \usepackage{fvextra}
          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+         
+         \usepackage{multicol}
+         \newcommand{\btwocol}{\begin{multicols}{2}}
+         \newcommand{\etwocol}{\end{multicols}}
 include-before-body:
   text: |
     \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
@@ -18,15 +22,17 @@ include-before-body:
       breaklines
       % Note: setting commandchars=\\\{\} here will cause an error 
     }
-header-includes:
-- \usepackage{multicol}
-- \newcommand{\btwocol}{\begin{multicols}{2}}
-- \newcommand{\etwocol}{\end{multicols}}
+
 ---
+
+\btwocol
 
 *Due: 5:59pm ET Monday September 29*
 
 *This problem can be done in teams of up 2 students.*
+
+\etwocol
+
 
 # Problem 1: Deriving He's initialization [10 points + 5 bonus pts]
 
@@ -300,7 +306,34 @@ This assignment explores one powerful concept in deep learning: **unsupervised r
 
 ## Answer
 
+```python
+# Task 1: Load Fashion-MNIST, convert to tensors in [0,1], make DataLoaders.
 
+def prepare_data(batch_size: int = 128):
+    transform = transforms.ToTensor()  # 28x28 grayscale -> float tensor in [0,1]
+
+    train_set = torchvision.datasets.FashionMNIST(
+        root="./", train=True, download=True, transform=transform
+    )
+    test_set = torchvision.datasets.FashionMNIST(
+        root="./", train=False, download=True, transform=transform
+    )
+
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2)
+    test_loader  = DataLoader(test_set,  batch_size=batch_size, shuffle=False, num_workers=2)
+
+    # quick checks
+    print("n/Data ready")
+    print(f"- train samples: {len(train_set)}")
+    print(f"- test samples : {len(test_set)}")
+    print(f"- image shape  : {train_set[0][0].shape}")  # (1, 28, 28)
+    print(f"- train batches: {len(train_loader)}")
+    return train_loader, test_loader
+
+# run task 1
+train_loader, test_loader = prepare_data(batch_size=128)
+
+```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task1 >}}
 
@@ -325,6 +358,35 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
 
 ## Answer
 
+```python
+# Task 2: Dense autoencoder. Encoder: 784->128->64. Decoder: 64->128->784 with Sigmoid.
+
+class Autoencoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(784, 128), nn.ReLU(),
+            nn.Linear(128, 64),  nn.ReLU(),
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(64, 128),  nn.ReLU(),
+            nn.Linear(128, 784), nn.Sigmoid(),  # keep outputs in [0,1]
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.decoder(self.encoder(x))
+
+    def encode(self, x: torch.Tensor) -> torch.Tensor:
+        return self.encoder(x)
+
+# build model and show size
+model = Autoencoder()
+params = sum(p.numel() for p in model.parameters())
+print("Model ready")
+print(f"- parameters: {params:,}")
+
+
+```
 
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task2 >}}
@@ -345,7 +407,45 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
 
 ## Answer
 
+```python
+# Task 3: Train for 20 epochs with MSE loss and Adam.
 
+def train_autoencoder(model: nn.Module, loader: DataLoader, epochs: int = 20, lr: float = 1e-3):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    opt = optim.Adam(model.parameters(), lr=lr)
+    loss_fn = nn.MSELoss()
+
+    print(f"Training on {device} for {epochs} epochs")
+    losses = []
+
+    for epoch in range(1, epochs + 1):
+        model.train()
+        running = 0.0
+
+        for i, (imgs, _) in enumerate(loader):
+            imgs = imgs.to(device).view(imgs.size(0), -1)   # (B, 1, 28, 28) -> (B, 784)
+
+            opt.zero_grad()
+            out = model(imgs)
+            loss = loss_fn(out, imgs)
+            loss.backward()
+            opt.step()
+
+            running += loss.item()
+            if i % 100 == 0:
+                print(f"  epoch {epoch:2d} | batch {i:4d}/{len(loader)} | loss {loss.item():.4f}")
+
+        avg = running / len(loader)
+        losses.append(avg)
+        print(f"  epoch {epoch:2d} complete | avg loss {avg:.4f}")
+
+    return model, losses
+
+# run task 3
+model, losses = train_autoencoder(model, train_loader, epochs=20, lr=1e-3)
+
+```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task3 >}}
 
@@ -362,7 +462,35 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
 
 ## Answer
 
+```python
+# Task 4: Eval mode, pass a test batch, show 2 originals (top) and 2 reconstructions (bottom).
 
+def visualize_reconstructions(model: nn.Module, test_loader: DataLoader, num_images: int = 2):
+    model.eval()
+    device = next(model.parameters()).device
+
+    images, _ = next(iter(test_loader))
+    images = images.to(device)
+    with torch.no_grad():
+        recon = model(images.view(images.size(0), -1)).view(-1, 1, 28, 28)
+
+    images = images.cpu()
+    recon = recon.cpu()
+
+    fig, axes = plt.subplots(2, 2, figsize=(8, 4))
+    axes[0, 0].imshow(images[0].squeeze(), cmap="gray"); axes[0, 0].set_title("Original 1"); axes[0, 0].axis("off")
+    axes[1, 0].imshow(recon[0].squeeze(),   cmap="gray"); axes[1, 0].set_title("Reconstructed 1"); axes[1, 0].axis("off")
+    axes[0, 1].imshow(images[1].squeeze(), cmap="gray"); axes[0, 1].set_title("Original 2"); axes[0, 1].axis("off")
+    axes[1, 1].imshow(recon[1].squeeze(),   cmap="gray"); axes[1, 1].set_title("Reconstructed 2"); axes[1, 1].axis("off")
+    fig.suptitle("Autoencoder: Test Originals vs Reconstructions")
+    plt.tight_layout()
+    plt.show()
+
+# run task 4
+visualize_reconstructions(model, test_loader, num_images=2)
+
+
+```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task4 >}}
 
@@ -371,7 +499,8 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
 
 
 
------
+
+
 
 # Submission
 
