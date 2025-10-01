@@ -895,6 +895,50 @@ Best config: {'layers': 3, 'hidden': 40, 'batch': 16, 'learning_rate': 0.01, 'al
 \begin{Shaded}
 \begin{Highlighting}[]
 
+\CommentTok{\# Retrain best model on full training set (train+val) for more epochs}
+\NormalTok{n\_features }\OperatorTok{=}\NormalTok{ X\_train.shape[}\DecValTok{1}\NormalTok{]}
+\NormalTok{n\_classes }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(y\_train.}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{1}\NormalTok{)}
+\CommentTok{\# Instantiate the best model}
+\CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}3 lines)}
+
+
+\NormalTok{torch.manual\_seed(best\_cfg[}\StringTok{\textquotesingle{}seed\textquotesingle{}}\NormalTok{]) }\CommentTok{\# SEED FIX}
+\NormalTok{best\_model }\OperatorTok{=}\NormalTok{ build\_mlp(}
+\NormalTok{    n\_features,}
+\NormalTok{    best\_cfg[}\StringTok{\textquotesingle{}layers\textquotesingle{}}\NormalTok{],}
+\NormalTok{    best\_cfg[}\StringTok{\textquotesingle{}hidden\textquotesingle{}}\NormalTok{],}
+\NormalTok{    n\_classes}
+\NormalTok{)}
+
+
+
+\CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+
+\CommentTok{\# create full training loader and test loader}
+\NormalTok{batch\_size }\OperatorTok{=}\NormalTok{ best\_cfg[}\StringTok{\textquotesingle{}batch\textquotesingle{}}\NormalTok{]}
+\NormalTok{full\_train\_loader }\OperatorTok{=}\NormalTok{ DataLoader(full\_train, batch\_size}\OperatorTok{=}\NormalTok{batch\_size, shuffle}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{test\_loader }\OperatorTok{=}\NormalTok{ DataLoader(TensorDataset(X\_test\_t, y\_test\_t), batch\_size}\OperatorTok{=}\NormalTok{batch\_size, shuffle}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
+\NormalTok{optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD(best\_model.parameters(),}
+\NormalTok{                          lr}\OperatorTok{=}\NormalTok{best\_cfg[}\StringTok{\textquotesingle{}learning\_rate\textquotesingle{}}\NormalTok{],}
+\NormalTok{                          weight\_decay}\OperatorTok{=}\NormalTok{best\_cfg[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{])}
+\CommentTok{\# retrain best model}
+\NormalTok{epochs\_final }\OperatorTok{=} \DecValTok{50}
+\NormalTok{parameter\_history }\OperatorTok{=}\NormalTok{ []}
+\ControlFlowTok{for}\NormalTok{ epoch }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epochs\_final):}
+    \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}2 lines)}
+
+\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}\OperatorTok{;}\NormalTok{ loss, flat\_params }\OperatorTok{=}\NormalTok{ train\_epoch(best\_model, full\_train\_loader, criterion, optimizer)}
+\NormalTok{    parameter\_history.append(flat\_params)}\OperatorTok{;}\NormalTok{ test\_acc }\OperatorTok{=}\NormalTok{ evaluate(best\_model, test\_loader)}\OperatorTok{;}\NormalTok{ t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
+
+
+    \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Final Train Epoch }\SpecialCharTok{\{}\NormalTok{epoch}\OperatorTok{+}\DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{/}\SpecialCharTok{\{}\NormalTok{epochs\_final}\SpecialCharTok{\}}\SpecialStringTok{: loss=}\SpecialCharTok{\{}\NormalTok{loss}\SpecialCharTok{:.4f\}}\SpecialStringTok{, test\_acc=}\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{, time=}\SpecialCharTok{\{}\NormalTok{t1}\OperatorTok{{-}}\NormalTok{t0}\SpecialCharTok{:.1f\}}\SpecialStringTok{s"}\NormalTok{)}
+
+\CommentTok{\# Print the length of the parameter\_history list}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Length of parameter history: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(parameter\_history)}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Final Test Accuracy: }\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
+
 \end{Highlighting}
 \end{Shaded}
 
@@ -975,6 +1019,162 @@ Final Test Accuracy: 0.8771
 \begin{Shaded}
 \begin{Highlighting}[]
 
+\KeywordTok{def}\NormalTok{ build\_enhanced\_mlp(input\_dim, n\_layers, hidden\_units, output\_dim,}
+\NormalTok{                       use\_batchnorm}\OperatorTok{=}\VariableTok{False}\NormalTok{, dropout\_rate}\OperatorTok{=}\FloatTok{0.0}\NormalTok{, activation}\OperatorTok{=}\StringTok{\textquotesingle{}relu\textquotesingle{}}\NormalTok{):}
+    \CommentTok{"""Build enhanced MLP with optional BatchNorm, Dropout, and different activations."""}
+\NormalTok{    layers }\OperatorTok{=}\NormalTok{ []}
+
+\NormalTok{    activations }\OperatorTok{=}\NormalTok{ \{}
+        \StringTok{\textquotesingle{}relu\textquotesingle{}}\NormalTok{: nn.ReLU(),}
+        \StringTok{\textquotesingle{}leaky\textquotesingle{}}\NormalTok{: nn.LeakyReLU(}\FloatTok{0.01}\NormalTok{),}
+        \StringTok{\textquotesingle{}elu\textquotesingle{}}\NormalTok{: nn.ELU(),}
+        \StringTok{\textquotesingle{}prelu\textquotesingle{}}\NormalTok{: nn.PReLU()}
+\NormalTok{    \}}
+\NormalTok{    act\_fn }\OperatorTok{=}\NormalTok{ activations[activation]}
+
+    \ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(n\_layers):}
+\NormalTok{        layers.append(nn.Linear(input\_dim, hidden\_units))}
+
+        \ControlFlowTok{if}\NormalTok{ use\_batchnorm:}
+\NormalTok{            layers.append(nn.BatchNorm1d(hidden\_units))}
+
+\NormalTok{        layers.append(act\_fn }\ControlFlowTok{if}\NormalTok{ activation }\OperatorTok{!=} \StringTok{\textquotesingle{}prelu\textquotesingle{}} \ControlFlowTok{else}\NormalTok{ nn.PReLU())}
+
+        \ControlFlowTok{if}\NormalTok{ dropout\_rate }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{            layers.append(nn.Dropout(dropout\_rate))}
+
+\NormalTok{        input\_dim }\OperatorTok{=}\NormalTok{ hidden\_units}
+
+\NormalTok{    layers.append(nn.Linear(input\_dim, output\_dim))}
+
+    \ControlFlowTok{return}\NormalTok{ nn.Sequential(}\OperatorTok{*}\NormalTok{layers)}
+
+
+\KeywordTok{def}\NormalTok{ enhanced\_hyperparam\_tuning(train\_dataset, val\_dataset, seed}\OperatorTok{=}\DecValTok{541}\NormalTok{):}
+    \CommentTok{"""Find best enhanced architecture config."""}
+\NormalTok{    torch.manual\_seed(seed)}
+\NormalTok{    np.random.seed(seed)}
+
+\NormalTok{    best\_cfg }\OperatorTok{=} \VariableTok{None}
+\NormalTok{    best\_acc }\OperatorTok{=} \FloatTok{0.0}
+
+\NormalTok{    batch\_sizes }\OperatorTok{=}\NormalTok{ [}\DecValTok{32}\NormalTok{, }\DecValTok{64}\NormalTok{, }\DecValTok{128}\NormalTok{]}
+\NormalTok{    learning\_rates }\OperatorTok{=}\NormalTok{ [}\FloatTok{0.001}\NormalTok{, }\FloatTok{0.0005}\NormalTok{, }\FloatTok{0.0001}\NormalTok{]}
+\NormalTok{    layers }\OperatorTok{=}\NormalTok{ [}\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{]}
+\NormalTok{    hidden }\OperatorTok{=}\NormalTok{ [}\DecValTok{64}\NormalTok{, }\DecValTok{128}\NormalTok{, }\DecValTok{256}\NormalTok{]}
+\NormalTok{    alphas }\OperatorTok{=}\NormalTok{ [}\DecValTok{0}\NormalTok{, }\FloatTok{0.0001}\NormalTok{, }\FloatTok{0.00001}\NormalTok{]}
+\NormalTok{    epochs }\OperatorTok{=}\NormalTok{ [}\DecValTok{30}\NormalTok{, }\DecValTok{40}\NormalTok{]}
+
+\NormalTok{    use\_batchnorm\_options }\OperatorTok{=}\NormalTok{ [}\VariableTok{True}\NormalTok{, }\VariableTok{False}\NormalTok{]}
+\NormalTok{    dropout\_rates }\OperatorTok{=}\NormalTok{ [}\FloatTok{0.0}\NormalTok{, }\FloatTok{0.2}\NormalTok{, }\FloatTok{0.3}\NormalTok{, }\FloatTok{0.5}\NormalTok{]}
+\NormalTok{    activations }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}relu\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}leaky\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}elu\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}prelu\textquotesingle{}}\NormalTok{]}
+
+\NormalTok{    x0, y0 }\OperatorTok{=}\NormalTok{ train\_dataset[}\DecValTok{0}\NormalTok{]}
+\NormalTok{    n\_features }\OperatorTok{=}\NormalTok{ x0.numel()}
+\NormalTok{    n\_classes }\OperatorTok{=} \DecValTok{10}
+
+\NormalTok{    loopcount }\OperatorTok{=} \DecValTok{0}
+\NormalTok{    config\_attempts }\OperatorTok{=} \DecValTok{15}
+
+    \ControlFlowTok{for}\NormalTok{ \_ }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(config\_attempts):}
+
+\NormalTok{        layer\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(layers))}
+\NormalTok{        batch\_size\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(batch\_sizes))}
+\NormalTok{        learning\_rate\_choice }\OperatorTok{=} \BuiltInTok{float}\NormalTok{(np.random.choice(learning\_rates))}
+\NormalTok{        hidden\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(hidden))}
+\NormalTok{        alpha\_choice }\OperatorTok{=} \BuiltInTok{float}\NormalTok{(np.random.choice(alphas))}
+\NormalTok{        epoch\_choice }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(np.random.choice(epochs))}
+\NormalTok{        use\_bn }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(np.random.choice(use\_batchnorm\_options))}
+\NormalTok{        dropout }\OperatorTok{=} \BuiltInTok{float}\NormalTok{(np.random.choice(dropout\_rates))}
+\NormalTok{        activation }\OperatorTok{=}\NormalTok{ np.random.choice(activations)}
+
+\NormalTok{        train\_loader }\OperatorTok{=}\NormalTok{ DataLoader(train\_dataset, batch\_size}\OperatorTok{=}\NormalTok{batch\_size\_choice, shuffle}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{        val\_loader }\OperatorTok{=}\NormalTok{ DataLoader(val\_dataset, batch\_size}\OperatorTok{=}\NormalTok{batch\_size\_choice, shuffle}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+
+\NormalTok{        torch.manual\_seed(seed }\OperatorTok{+}\NormalTok{ loopcount) }\CommentTok{\# SEED FIX}
+\NormalTok{        model }\OperatorTok{=}\NormalTok{ build\_enhanced\_mlp(n\_features, layer\_choice, hidden\_choice, n\_classes,}
+\NormalTok{                                  use\_batchnorm}\OperatorTok{=}\NormalTok{use\_bn, dropout\_rate}\OperatorTok{=}\NormalTok{dropout, activation}\OperatorTok{=}\NormalTok{activation)}
+
+\NormalTok{        weight\_params }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{        bias\_params }\OperatorTok{=}\NormalTok{ []}
+        \ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ model.named\_parameters():}
+\NormalTok{            (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
+
+\NormalTok{        optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([}
+\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: alpha\_choice\},}
+\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
+\NormalTok{        ], lr}\OperatorTok{=}\NormalTok{learning\_rate\_choice)}
+
+\NormalTok{        criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
+
+        \ControlFlowTok{for}\NormalTok{ \_e }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epoch\_choice):}
+\NormalTok{            train\_epoch(model, train\_loader, criterion, optimizer)}
+
+\NormalTok{        current\_accuracy }\OperatorTok{=}\NormalTok{ evaluate(model, val\_loader)}
+
+\NormalTok{        loopcount }\OperatorTok{=}\NormalTok{ loopcount }\OperatorTok{+} \DecValTok{1}
+        \CommentTok{\#print("on enhanced loop ", loopcount)}
+
+        \ControlFlowTok{if}\NormalTok{ current\_accuracy }\OperatorTok{\textgreater{}}\NormalTok{ best\_acc:}
+\NormalTok{            best\_acc }\OperatorTok{=}\NormalTok{ current\_accuracy}
+            \BuiltInTok{print}\NormalTok{(}\StringTok{"best enhanced accuracy "}\NormalTok{, best\_acc)}
+
+\NormalTok{            best\_cfg }\OperatorTok{=}\NormalTok{ \{}
+                \StringTok{"layers"}\NormalTok{: layer\_choice,}
+                \StringTok{"hidden"}\NormalTok{: hidden\_choice,}
+                \StringTok{"batch"}\NormalTok{: batch\_size\_choice,}
+                \StringTok{"learning\_rate"}\NormalTok{: learning\_rate\_choice,}
+                \StringTok{"alpha"}\NormalTok{: alpha\_choice,}
+                \StringTok{"epochs"}\NormalTok{: epoch\_choice,}
+                \StringTok{"batchnorm"}\NormalTok{: use\_bn,}
+                \StringTok{"dropout"}\NormalTok{: dropout,}
+                \StringTok{"activation"}\NormalTok{: activation,}
+                \StringTok{"seed"}\NormalTok{: seed }\OperatorTok{+}\NormalTok{ loopcount }\OperatorTok{{-}} \DecValTok{1}  \CommentTok{\# SEED FIX}
+\NormalTok{            \}}
+
+            \BuiltInTok{print}\NormalTok{(}\StringTok{"New best enhanced:"}\NormalTok{, best\_cfg, }\StringTok{"val\_acc="}\NormalTok{, }\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{best\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
+
+    \ControlFlowTok{return}\NormalTok{ best\_cfg, best\_acc}
+
+
+\NormalTok{enhanced\_cfg, enhanced\_acc }\OperatorTok{=}\NormalTok{ enhanced\_hyperparam\_tuning(train\_dataset, val\_dataset)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Enhanced config: }\SpecialCharTok{\{}\NormalTok{enhanced\_cfg}\SpecialCharTok{\}}\SpecialStringTok{ with val\_acc=}\SpecialCharTok{\{}\NormalTok{enhanced\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
+
+\CommentTok{\# Train final enhanced model}
+\NormalTok{torch.manual\_seed(enhanced\_cfg[}\StringTok{\textquotesingle{}seed\textquotesingle{}}\NormalTok{]) }\CommentTok{\# SEED FIX}
+\NormalTok{enhanced\_model }\OperatorTok{=}\NormalTok{ build\_enhanced\_mlp(}
+\NormalTok{    n\_features,}
+\NormalTok{    enhanced\_cfg[}\StringTok{\textquotesingle{}layers\textquotesingle{}}\NormalTok{],}
+\NormalTok{    enhanced\_cfg[}\StringTok{\textquotesingle{}hidden\textquotesingle{}}\NormalTok{],}
+\NormalTok{    n\_classes,}
+\NormalTok{    use\_batchnorm}\OperatorTok{=}\NormalTok{enhanced\_cfg[}\StringTok{\textquotesingle{}batchnorm\textquotesingle{}}\NormalTok{],}
+\NormalTok{    dropout\_rate}\OperatorTok{=}\NormalTok{enhanced\_cfg[}\StringTok{\textquotesingle{}dropout\textquotesingle{}}\NormalTok{],}
+\NormalTok{    activation}\OperatorTok{=}\NormalTok{enhanced\_cfg[}\StringTok{\textquotesingle{}activation\textquotesingle{}}\NormalTok{]}
+\NormalTok{)}
+
+\NormalTok{batch\_size }\OperatorTok{=}\NormalTok{ enhanced\_cfg[}\StringTok{\textquotesingle{}batch\textquotesingle{}}\NormalTok{]}
+\NormalTok{full\_train\_loader }\OperatorTok{=}\NormalTok{ DataLoader(full\_train, batch\_size}\OperatorTok{=}\NormalTok{batch\_size, shuffle}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{test\_loader }\OperatorTok{=}\NormalTok{ DataLoader(TensorDataset(X\_test\_t, y\_test\_t), batch\_size}\OperatorTok{=}\NormalTok{batch\_size, shuffle}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
+
+\NormalTok{weight\_params }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{bias\_params }\OperatorTok{=}\NormalTok{ []}
+\ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ enhanced\_model.named\_parameters():}
+\NormalTok{    (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
+
+\NormalTok{optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([}
+\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: enhanced\_cfg[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{]\},}
+\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
+\NormalTok{], lr}\OperatorTok{=}\NormalTok{enhanced\_cfg[}\StringTok{\textquotesingle{}learning\_rate\textquotesingle{}}\NormalTok{])}
+
+\CommentTok{\# retrain enhanced model}
+\NormalTok{epochs\_final }\OperatorTok{=} \DecValTok{50}
+\ControlFlowTok{for}\NormalTok{ epoch }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epochs\_final):}
+\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}\OperatorTok{;}\NormalTok{ loss, \_ }\OperatorTok{=}\NormalTok{ train\_epoch(enhanced\_model, full\_train\_loader, criterion, optimizer)}
+\NormalTok{    test\_acc }\OperatorTok{=}\NormalTok{ evaluate(enhanced\_model, test\_loader)}\OperatorTok{;}\NormalTok{ t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Enhanced Train Epoch }\SpecialCharTok{\{}\NormalTok{epoch}\OperatorTok{+}\DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{/}\SpecialCharTok{\{}\NormalTok{epochs\_final}\SpecialCharTok{\}}\SpecialStringTok{: loss=}\SpecialCharTok{\{}\NormalTok{loss}\SpecialCharTok{:.4f\}}\SpecialStringTok{, test\_acc=}\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{, time=}\SpecialCharTok{\{}\NormalTok{t1}\OperatorTok{{-}}\NormalTok{t0}\SpecialCharTok{:.1f\}}\SpecialStringTok{s"}\NormalTok{)}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Final Enhanced Test Accuracy: }\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1082,7 +1282,58 @@ MNIST:
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ plotPath(loader, trajectory, model):}
+    \CommentTok{\# }\AlertTok{TODO}\CommentTok{: change this toy plot to show a 2{-}d projection of the weight space}
+    \CommentTok{\# along with the associated loss (cross{-}entropy), plus a superimposed}
+    \CommentTok{\# trajectory across the landscape that was traversed using SGD. Use}
+    \CommentTok{\# sklearn.decomposition.PCA\textquotesingle{}s fit\_transform and inverse\_transform methods.}
 
+    \ImportTok{from}\NormalTok{ sklearn.decomposition }\ImportTok{import}\NormalTok{ PCA}
+
+    \CommentTok{\# Setup PCA and subset loader for efficient computation}
+\NormalTok{    trajectory\_array }\OperatorTok{=}\NormalTok{ np.array(trajectory)}
+\NormalTok{    pca }\OperatorTok{=}\NormalTok{ PCA(n\_components}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{    trajectory\_2d }\OperatorTok{=}\NormalTok{ pca.fit\_transform(trajectory\_array)}
+
+    \CommentTok{\# Create subset of training data (2500 examples) as suggested}
+\NormalTok{    subset\_indices }\OperatorTok{=}\NormalTok{ np.random.choice(}\BuiltInTok{len}\NormalTok{(loader.dataset), }\BuiltInTok{min}\NormalTok{(}\DecValTok{2500}\NormalTok{, }\BuiltInTok{len}\NormalTok{(loader.dataset)), replace}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{    subset\_loader }\OperatorTok{=}\NormalTok{ DataLoader(torch.utils.data.Subset(loader.dataset, subset\_indices), batch\_size}\OperatorTok{=}\DecValTok{256}\NormalTok{)}
+\NormalTok{    criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
+
+    \KeywordTok{def}\NormalTok{ lossFunction(x1, x2):}
+\NormalTok{        point\_params }\OperatorTok{=}\NormalTok{ pca.inverse\_transform(np.array([[x1, x2]]))[}\DecValTok{0}\NormalTok{]}
+\NormalTok{        load\_params\_into\_model(model, torch.from\_numpy(point\_params).}\BuiltInTok{float}\NormalTok{())}
+        \ControlFlowTok{return}\NormalTok{ compute\_loss(model, subset\_loader, criterion)}
+
+\NormalTok{    fig }\OperatorTok{=}\NormalTok{ plt.figure()}
+\NormalTok{    ax }\OperatorTok{=}\NormalTok{ fig.add\_subplot(projection}\OperatorTok{=}\StringTok{\textquotesingle{}3d\textquotesingle{}}\NormalTok{)}
+
+    \CommentTok{\# Compute the CE loss on a grid of points (corresonding to different w).}
+\NormalTok{    x\_min, x\_max }\OperatorTok{=}\NormalTok{ trajectory\_2d[:, }\DecValTok{0}\NormalTok{].}\BuiltInTok{min}\NormalTok{(), trajectory\_2d[:, }\DecValTok{0}\NormalTok{].}\BuiltInTok{max}\NormalTok{()}
+\NormalTok{    y\_min, y\_max }\OperatorTok{=}\NormalTok{ trajectory\_2d[:, }\DecValTok{1}\NormalTok{].}\BuiltInTok{min}\NormalTok{(), trajectory\_2d[:, }\DecValTok{1}\NormalTok{].}\BuiltInTok{max}\NormalTok{()}
+\NormalTok{    x\_margin }\OperatorTok{=} \FloatTok{0.2} \OperatorTok{*}\NormalTok{ (x\_max }\OperatorTok{{-}}\NormalTok{ x\_min)}
+\NormalTok{    y\_margin }\OperatorTok{=} \FloatTok{0.2} \OperatorTok{*}\NormalTok{ (y\_max }\OperatorTok{{-}}\NormalTok{ y\_min)}
+\NormalTok{    axis1 }\OperatorTok{=}\NormalTok{ np.linspace(x\_min }\OperatorTok{{-}}\NormalTok{ x\_margin, x\_max }\OperatorTok{+}\NormalTok{ x\_margin, }\DecValTok{25}\NormalTok{) }\CommentTok{\#have to cap this at 25 or i get an error}
+\NormalTok{    axis2 }\OperatorTok{=}\NormalTok{ np.linspace(y\_min }\OperatorTok{{-}}\NormalTok{ y\_margin, y\_max }\OperatorTok{+}\NormalTok{ y\_margin, }\DecValTok{25}\NormalTok{)}
+\NormalTok{    Xaxis, Yaxis }\OperatorTok{=}\NormalTok{ np.meshgrid(axis1, axis2)}
+\NormalTok{    Zaxis }\OperatorTok{=}\NormalTok{ np.zeros((}\DecValTok{25}\NormalTok{, }\DecValTok{25}\NormalTok{))}
+    \ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in}\NormalTok{ tqdm.tqdm(}\BuiltInTok{range}\NormalTok{(}\DecValTok{25}\NormalTok{)):}
+        \ControlFlowTok{for}\NormalTok{ j }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{25}\NormalTok{):}
+\NormalTok{            Zaxis[i,j] }\OperatorTok{=}\NormalTok{ lossFunction(Xaxis[i,j], Yaxis[i,j])}
+\NormalTok{    ax.plot\_surface(Xaxis, Yaxis, Zaxis, alpha}\OperatorTok{=}\FloatTok{0.6}\NormalTok{)}
+
+    \CommentTok{\# Now superimpose a scatter plot showing the weights during SGD.}
+\NormalTok{    Xaxis }\OperatorTok{=}\NormalTok{ trajectory\_2d[:, }\DecValTok{0}\NormalTok{]}
+\NormalTok{    Yaxis }\OperatorTok{=}\NormalTok{ trajectory\_2d[:, }\DecValTok{1}\NormalTok{]}
+\NormalTok{    Zaxis }\OperatorTok{=}\NormalTok{ np.array([lossFunction(x, y) }\ControlFlowTok{for}\NormalTok{ x, y }\KeywordTok{in} \BuiltInTok{zip}\NormalTok{(Xaxis, Yaxis)])}
+\NormalTok{    ax.scatter(Xaxis, Yaxis, Zaxis, color}\OperatorTok{=}\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{    plt.show()}
+
+\CommentTok{\# Problem 3: Visualizing the loss landscape and optimization trajectories}
+\CommentTok{\# Plot the trajectory of parameters during training}
+\CommentTok{\# Uncomment to run}
+\NormalTok{plotPath(full\_train\_loader, parameter\_history, best\_model)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1096,6 +1347,16 @@ MNIST:
 trajectory.}
 
 \end{figure}%
+
+The visualization shows that the neural network optimization follows a
+clear descent path through the loss landscape. The PCA projection allows
+us to see the optimization dynamics in a reduced (and therefore
+visualizable) dimension. It shows how SGD navigates from high-loss
+regions (initialization) down into a valley or local minimum. The curved
+shows that SGD doesn't take the shortest path but rather follows the
+gradient, making consistent but progressivly more mythodical progress
+toward lower loss. The concentration of trajectory points near the
+aparent minimum shows successful convergence of the training process.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 

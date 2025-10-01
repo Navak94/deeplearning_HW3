@@ -554,6 +554,51 @@ print(f"Best config: {best_cfg} with val_acc={best_acc:.4f}")
 
 ```python
 
+# Retrain best model on full training set (train+val) for more epochs
+n_features = X_train.shape[1]
+n_classes = int(y_train.max() + 1)
+# Instantiate the best model
+# BEGIN YOUR CODE HERE (~3 lines)
+
+
+torch.manual_seed(best_cfg['seed']) # SEED FIX
+best_model = build_mlp(
+    n_features,
+    best_cfg['layers'],
+    best_cfg['hidden'],
+    n_classes
+)
+
+
+
+# END YOUR CODE HERE
+
+# create full training loader and test loader
+batch_size = best_cfg['batch']
+full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(best_model.parameters(),
+                          lr=best_cfg['learning_rate'],
+                          weight_decay=best_cfg['alpha'])
+# retrain best model
+epochs_final = 50
+parameter_history = []
+for epoch in range(epochs_final):
+    # BEGIN YOUR CODE HERE (~2 lines)
+
+    t0 = __import__('time').time(); loss, flat_params = train_epoch(best_model, full_train_loader, criterion, optimizer)
+    parameter_history.append(flat_params); test_acc = evaluate(best_model, test_loader); t1 = __import__('time').time()
+
+
+    # END YOUR CODE HERE
+    print(f"Final Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
+
+# Print the length of the parameter_history list
+print(f"Length of parameter history: {len(parameter_history)}")
+print(f"Final Test Accuracy: {test_acc:.4f}")
+
+
 ```
 
 
@@ -569,6 +614,163 @@ print(f"Best config: {best_cfg} with val_acc={best_acc:.4f}")
 ## Answer
 
 ```python
+
+def build_enhanced_mlp(input_dim, n_layers, hidden_units, output_dim,
+                       use_batchnorm=False, dropout_rate=0.0, activation='relu'):
+    """Build enhanced MLP with optional BatchNorm, Dropout, and different activations."""
+    layers = []
+
+    activations = {
+        'relu': nn.ReLU(),
+        'leaky': nn.LeakyReLU(0.01),
+        'elu': nn.ELU(),
+        'prelu': nn.PReLU()
+    }
+    act_fn = activations[activation]
+
+    for i in range(n_layers):
+        layers.append(nn.Linear(input_dim, hidden_units))
+
+        if use_batchnorm:
+            layers.append(nn.BatchNorm1d(hidden_units))
+
+        layers.append(act_fn if activation != 'prelu' else nn.PReLU())
+
+        if dropout_rate > 0:
+            layers.append(nn.Dropout(dropout_rate))
+
+        input_dim = hidden_units
+
+    layers.append(nn.Linear(input_dim, output_dim))
+
+    return nn.Sequential(*layers)
+
+
+def enhanced_hyperparam_tuning(train_dataset, val_dataset, seed=541):
+    """Find best enhanced architecture config."""
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
+    best_cfg = None
+    best_acc = 0.0
+
+    batch_sizes = [32, 64, 128]
+    learning_rates = [0.001, 0.0005, 0.0001]
+    layers = [3, 4, 5]
+    hidden = [64, 128, 256]
+    alphas = [0, 0.0001, 0.00001]
+    epochs = [30, 40]
+
+    use_batchnorm_options = [True, False]
+    dropout_rates = [0.0, 0.2, 0.3, 0.5]
+    activations = ['relu', 'leaky', 'elu', 'prelu']
+
+    x0, y0 = train_dataset[0]
+    n_features = x0.numel()
+    n_classes = 10
+
+    loopcount = 0
+    config_attempts = 15
+
+    for _ in range(config_attempts):
+
+        layer_choice = int(np.random.choice(layers))
+        batch_size_choice = int(np.random.choice(batch_sizes))
+        learning_rate_choice = float(np.random.choice(learning_rates))
+        hidden_choice = int(np.random.choice(hidden))
+        alpha_choice = float(np.random.choice(alphas))
+        epoch_choice = int(np.random.choice(epochs))
+        use_bn = bool(np.random.choice(use_batchnorm_options))
+        dropout = float(np.random.choice(dropout_rates))
+        activation = np.random.choice(activations)
+
+        train_loader = DataLoader(train_dataset, batch_size=batch_size_choice, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size_choice, shuffle=False)
+
+        torch.manual_seed(seed + loopcount) # SEED FIX
+        model = build_enhanced_mlp(n_features, layer_choice, hidden_choice, n_classes,
+                                  use_batchnorm=use_bn, dropout_rate=dropout, activation=activation)
+
+        weight_params = []
+        bias_params = []
+        for name, p in model.named_parameters():
+            (weight_params if 'weight' in name else bias_params).append(p)
+
+        optimizer = torch.optim.SGD([
+            {'params': weight_params, 'weight_decay': alpha_choice},
+            {'params': bias_params, 'weight_decay': 0.0}
+        ], lr=learning_rate_choice)
+
+        criterion = nn.CrossEntropyLoss()
+
+        for _e in range(epoch_choice):
+            train_epoch(model, train_loader, criterion, optimizer)
+
+        current_accuracy = evaluate(model, val_loader)
+
+        loopcount = loopcount + 1
+        #print("on enhanced loop ", loopcount)
+
+        if current_accuracy > best_acc:
+            best_acc = current_accuracy
+            print("best enhanced accuracy ", best_acc)
+
+            best_cfg = {
+                "layers": layer_choice,
+                "hidden": hidden_choice,
+                "batch": batch_size_choice,
+                "learning_rate": learning_rate_choice,
+                "alpha": alpha_choice,
+                "epochs": epoch_choice,
+                "batchnorm": use_bn,
+                "dropout": dropout,
+                "activation": activation,
+                "seed": seed + loopcount - 1  # SEED FIX
+            }
+
+            print("New best enhanced:", best_cfg, "val_acc=", f"{best_acc:.4f}")
+
+    return best_cfg, best_acc
+
+
+enhanced_cfg, enhanced_acc = enhanced_hyperparam_tuning(train_dataset, val_dataset)
+print(f"Enhanced config: {enhanced_cfg} with val_acc={enhanced_acc:.4f}")
+
+# Train final enhanced model
+torch.manual_seed(enhanced_cfg['seed']) # SEED FIX
+enhanced_model = build_enhanced_mlp(
+    n_features,
+    enhanced_cfg['layers'],
+    enhanced_cfg['hidden'],
+    n_classes,
+    use_batchnorm=enhanced_cfg['batchnorm'],
+    dropout_rate=enhanced_cfg['dropout'],
+    activation=enhanced_cfg['activation']
+)
+
+batch_size = enhanced_cfg['batch']
+full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
+criterion = nn.CrossEntropyLoss()
+
+weight_params = []
+bias_params = []
+for name, p in enhanced_model.named_parameters():
+    (weight_params if 'weight' in name else bias_params).append(p)
+
+optimizer = torch.optim.SGD([
+    {'params': weight_params, 'weight_decay': enhanced_cfg['alpha']},
+    {'params': bias_params, 'weight_decay': 0.0}
+], lr=enhanced_cfg['learning_rate'])
+
+# retrain enhanced model
+epochs_final = 50
+for epoch in range(epochs_final):
+    t0 = __import__('time').time(); loss, _ = train_epoch(enhanced_model, full_train_loader, criterion, optimizer)
+    test_acc = evaluate(enhanced_model, test_loader); t1 = __import__('time').time()
+    print(f"Enhanced Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
+
+print(f"Final Enhanced Test Accuracy: {test_acc:.4f}")
 
 ```
 
@@ -590,11 +792,64 @@ Visualize the SGD trajectory of your network when trained on Fashion MNIST:
 ## Answer
 
 ```python
+def plotPath(loader, trajectory, model):
+    # TODO: change this toy plot to show a 2-d projection of the weight space
+    # along with the associated loss (cross-entropy), plus a superimposed
+    # trajectory across the landscape that was traversed using SGD. Use
+    # sklearn.decomposition.PCA's fit_transform and inverse_transform methods.
 
+    from sklearn.decomposition import PCA
+
+    # Setup PCA and subset loader for efficient computation
+    trajectory_array = np.array(trajectory)
+    pca = PCA(n_components=2)
+    trajectory_2d = pca.fit_transform(trajectory_array)
+
+    # Create subset of training data (2500 examples) as suggested
+    subset_indices = np.random.choice(len(loader.dataset), min(2500, len(loader.dataset)), replace=False)
+    subset_loader = DataLoader(torch.utils.data.Subset(loader.dataset, subset_indices), batch_size=256)
+    criterion = nn.CrossEntropyLoss()
+
+    def lossFunction(x1, x2):
+        point_params = pca.inverse_transform(np.array([[x1, x2]]))[0]
+        load_params_into_model(model, torch.from_numpy(point_params).float())
+        return compute_loss(model, subset_loader, criterion)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    # Compute the CE loss on a grid of points (corresonding to different w).
+    x_min, x_max = trajectory_2d[:, 0].min(), trajectory_2d[:, 0].max()
+    y_min, y_max = trajectory_2d[:, 1].min(), trajectory_2d[:, 1].max()
+    x_margin = 0.2 * (x_max - x_min)
+    y_margin = 0.2 * (y_max - y_min)
+    axis1 = np.linspace(x_min - x_margin, x_max + x_margin, 25) #have to cap this at 25 or i get an error
+    axis2 = np.linspace(y_min - y_margin, y_max + y_margin, 25)
+    Xaxis, Yaxis = np.meshgrid(axis1, axis2)
+    Zaxis = np.zeros((25, 25))
+    for i in tqdm.tqdm(range(25)):
+        for j in range(25):
+            Zaxis[i,j] = lossFunction(Xaxis[i,j], Yaxis[i,j])
+    ax.plot_surface(Xaxis, Yaxis, Zaxis, alpha=0.6)
+
+    # Now superimpose a scatter plot showing the weights during SGD.
+    Xaxis = trajectory_2d[:, 0]
+    Yaxis = trajectory_2d[:, 1]
+    Zaxis = np.array([lossFunction(x, y) for x, y in zip(Xaxis, Yaxis)])
+    ax.scatter(Xaxis, Yaxis, Zaxis, color='r')
+
+    plt.show()
+
+# Problem 3: Visualizing the loss landscape and optimization trajectories
+# Plot the trajectory of parameters during training
+# Uncomment to run
+plotPath(full_train_loader, parameter_history, best_model)
 ```
 
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob3 >}}
+
+The visualization shows that the neural network optimization follows a clear descent path through the loss landscape. The PCA projection allows us to see the optimization dynamics in a reduced (and therefore visualizable) dimension. It shows how SGD navigates from high-loss regions (initialization) down into a valley or local minimum. The curved shows that SGD doesn't take the shortest path but rather follows the gradient, making consistent but progressivly more mythodical progress toward lower loss. The concentration of trajectory points near the aparent minimum shows successful convergence of the training process.
 
 ---
 
