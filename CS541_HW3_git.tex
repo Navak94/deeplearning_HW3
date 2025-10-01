@@ -484,12 +484,8 @@ Specifically, the starting network you will create should implement a
 function \(f:\mathbb{R}^{784}\rightarrow\mathbb{R}^{10},\) where:
 \[\begin{aligned}z^{(1)}&=W^{(1)}x+b^{(1)}\\ h^{(1)}&=ReLU(z^{(1)})\\ z^{(2)}&=W^{(2)}h^{(1)}+b^{(2)}\\ &:\end{aligned}\]
 \[\begin{aligned}z^{(l)}&=W^{(l)}h^{(l-1)}+b^{(l)}\\ \hat{y}&=softmax(z^{(l)})\end{aligned}\]
-The network specified above is shown in the figure below: X
-\(\rightarrow\) \(W^{(1)}\) \(\rightarrow\) \(b^{(1)}\) \(\rightarrow\)
-\(z^{(1)}\) \(\rightarrow\) \(h^{(1)}\) \(\rightarrow\) \(W^{(2)}\)
-\(\rightarrow\) \(\mathfrak{D}^{(2)}\) \(\rightarrow\) \(z^{(2)}\)
-\(h^{(2)}\) \(\rightarrow\) \ldots{} \(\rightarrow\) \(z^{(l)}\)
-\(\rightarrow\) \(W^{(l)}\)/ \(b^{(l)}\) \(\rightarrow\) \(\hat{y}\)
+
+The network specified above is shown in the figure below:
 
 As usual, the (unregularized) cross-entropy cost function should be:
 \[f_{CE}(W^{(1)},b^{(1)},...,W^{(l)},b^{(l)})=-\frac{1}{n}\sum_{i=1}^{n}\sum_{k=1}^{10}y_{k}^{(i)}log\hat{y}_{k}^{(i)}\]
@@ -627,6 +623,19 @@ point)}\label{task-1-data-preparation-2-point}
   Create a \texttt{DataLoader} for both the training and test sets. For
   this unsupervised task, we only need the image data, not the labels.
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-3}
+
+\phantomsection\label{task1}
+\begin{verbatim}
+n/Data ready
+- train samples: 60000
+- test samples : 10000
+- image shape  : torch.Size([1, 28, 28])
+- train batches: 469
+\end{verbatim}
 
 \subsection{Task 2: Autoencoder Architecture (6
 points)}\label{task-2-autoencoder-architecture-6-points}
