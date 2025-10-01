@@ -637,6 +637,8 @@ n/Data ready
 - train batches: 469
 \end{verbatim}
 
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
 \subsection{Task 2: Autoencoder Architecture (6
 points)}\label{task-2-autoencoder-architecture-6-points}
 
@@ -679,6 +681,18 @@ architecture:
   \end{itemize}
 \end{itemize}
 
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-4}
+
+\phantomsection\label{task2}
+\begin{verbatim}
+Model ready
+- parameters: 218,192
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
 \subsection{Task 3: Model Training (6
 points)}\label{task-3-model-training-6-points}
 
@@ -707,6 +721,137 @@ points)}\label{task-3-model-training-6-points}
   \end{itemize}
 \end{enumerate}
 
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-5}
+
+\phantomsection\label{task3}
+\begin{verbatim}
+Training on cuda for 20 epochs
+  epoch  1 | batch    0/469 | loss 0.1714
+  epoch  1 | batch  100/469 | loss 0.0410
+  epoch  1 | batch  200/469 | loss 0.0289
+  epoch  1 | batch  300/469 | loss 0.0250
+  epoch  1 | batch  400/469 | loss 0.0228
+  epoch  1 complete | avg loss 0.0374
+  epoch  2 | batch    0/469 | loss 0.0212
+  epoch  2 | batch  100/469 | loss 0.0196
+  epoch  2 | batch  200/469 | loss 0.0210
+  epoch  2 | batch  300/469 | loss 0.0218
+  epoch  2 | batch  400/469 | loss 0.0195
+  epoch  2 complete | avg loss 0.0198
+  epoch  3 | batch    0/469 | loss 0.0173
+  epoch  3 | batch  100/469 | loss 0.0168
+  epoch  3 | batch  200/469 | loss 0.0161
+  epoch  3 | batch  300/469 | loss 0.0163
+  epoch  3 | batch  400/469 | loss 0.0155
+  epoch  3 complete | avg loss 0.0172
+  epoch  4 | batch    0/469 | loss 0.0167
+  epoch  4 | batch  100/469 | loss 0.0159
+  epoch  4 | batch  200/469 | loss 0.0151
+  epoch  4 | batch  300/469 | loss 0.0149
+  epoch  4 | batch  400/469 | loss 0.0153
+  epoch  4 complete | avg loss 0.0156
+  epoch  5 | batch    0/469 | loss 0.0158
+  epoch  5 | batch  100/469 | loss 0.0156
+  epoch  5 | batch  200/469 | loss 0.0147
+  epoch  5 | batch  300/469 | loss 0.0141
+  epoch  5 | batch  400/469 | loss 0.0151
+  epoch  5 complete | avg loss 0.0145
+  epoch  6 | batch    0/469 | loss 0.0133
+  epoch  6 | batch  100/469 | loss 0.0143
+  epoch  6 | batch  200/469 | loss 0.0126
+  epoch  6 | batch  300/469 | loss 0.0132
+  epoch  6 | batch  400/469 | loss 0.0135
+  epoch  6 complete | avg loss 0.0136
+  epoch  7 | batch    0/469 | loss 0.0130
+  epoch  7 | batch  100/469 | loss 0.0145
+  epoch  7 | batch  200/469 | loss 0.0117
+  epoch  7 | batch  300/469 | loss 0.0120
+  epoch  7 | batch  400/469 | loss 0.0115
+  epoch  7 complete | avg loss 0.0129
+  epoch  8 | batch    0/469 | loss 0.0125
+  epoch  8 | batch  100/469 | loss 0.0124
+  epoch  8 | batch  200/469 | loss 0.0116
+  epoch  8 | batch  300/469 | loss 0.0124
+  epoch  8 | batch  400/469 | loss 0.0126
+  epoch  8 complete | avg loss 0.0124
+  epoch  9 | batch    0/469 | loss 0.0135
+  epoch  9 | batch  100/469 | loss 0.0118
+  epoch  9 | batch  200/469 | loss 0.0108
+  epoch  9 | batch  300/469 | loss 0.0125
+  epoch  9 | batch  400/469 | loss 0.0126
+  epoch  9 complete | avg loss 0.0119
+  epoch 10 | batch    0/469 | loss 0.0112
+  epoch 10 | batch  100/469 | loss 0.0115
+  epoch 10 | batch  200/469 | loss 0.0111
+  epoch 10 | batch  300/469 | loss 0.0117
+  epoch 10 | batch  400/469 | loss 0.0115
+  epoch 10 complete | avg loss 0.0116
+  epoch 11 | batch    0/469 | loss 0.0104
+  epoch 11 | batch  100/469 | loss 0.0115
+  epoch 11 | batch  200/469 | loss 0.0109
+  epoch 11 | batch  300/469 | loss 0.0115
+  epoch 11 | batch  400/469 | loss 0.0108
+  epoch 11 complete | avg loss 0.0112
+  epoch 12 | batch    0/469 | loss 0.0111
+  epoch 12 | batch  100/469 | loss 0.0114
+  epoch 12 | batch  200/469 | loss 0.0109
+  epoch 12 | batch  300/469 | loss 0.0108
+  epoch 12 | batch  400/469 | loss 0.0099
+  epoch 12 complete | avg loss 0.0109
+  epoch 13 | batch    0/469 | loss 0.0110
+  epoch 13 | batch  100/469 | loss 0.0109
+  epoch 13 | batch  200/469 | loss 0.0101
+  epoch 13 | batch  300/469 | loss 0.0124
+  epoch 13 | batch  400/469 | loss 0.0093
+  epoch 13 complete | avg loss 0.0107
+  epoch 14 | batch    0/469 | loss 0.0113
+  epoch 14 | batch  100/469 | loss 0.0112
+  epoch 14 | batch  200/469 | loss 0.0105
+  epoch 14 | batch  300/469 | loss 0.0104
+  epoch 14 | batch  400/469 | loss 0.0102
+  epoch 14 complete | avg loss 0.0105
+  epoch 15 | batch    0/469 | loss 0.0115
+  epoch 15 | batch  100/469 | loss 0.0096
+  epoch 15 | batch  200/469 | loss 0.0098
+  epoch 15 | batch  300/469 | loss 0.0101
+  epoch 15 | batch  400/469 | loss 0.0123
+  epoch 15 complete | avg loss 0.0103
+  epoch 16 | batch    0/469 | loss 0.0100
+  epoch 16 | batch  100/469 | loss 0.0114
+  epoch 16 | batch  200/469 | loss 0.0111
+  epoch 16 | batch  300/469 | loss 0.0105
+  epoch 16 | batch  400/469 | loss 0.0103
+  epoch 16 complete | avg loss 0.0101
+  epoch 17 | batch    0/469 | loss 0.0092
+  epoch 17 | batch  100/469 | loss 0.0106
+  epoch 17 | batch  200/469 | loss 0.0095
+  epoch 17 | batch  300/469 | loss 0.0099
+  epoch 17 | batch  400/469 | loss 0.0101
+  epoch 17 complete | avg loss 0.0100
+  epoch 18 | batch    0/469 | loss 0.0099
+  epoch 18 | batch  100/469 | loss 0.0101
+  epoch 18 | batch  200/469 | loss 0.0093
+  epoch 18 | batch  300/469 | loss 0.0105
+  epoch 18 | batch  400/469 | loss 0.0097
+  epoch 18 complete | avg loss 0.0098
+  epoch 19 | batch    0/469 | loss 0.0101
+  epoch 19 | batch  100/469 | loss 0.0104
+  epoch 19 | batch  200/469 | loss 0.0094
+  epoch 19 | batch  300/469 | loss 0.0089
+  epoch 19 | batch  400/469 | loss 0.0085
+  epoch 19 complete | avg loss 0.0097
+  epoch 20 | batch    0/469 | loss 0.0097
+  epoch 20 | batch  100/469 | loss 0.0088
+  epoch 20 | batch  200/469 | loss 0.0108
+  epoch 20 | batch  300/469 | loss 0.0094
+  epoch 20 | batch  400/469 | loss 0.0093
+  epoch 20 complete | avg loss 0.0095
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
 \subsection{Task 4: Visualizing Reconstructions (6
 points)}\label{task-4-visualizing-reconstructions-6-points}
 
@@ -725,6 +870,14 @@ points)}\label{task-4-visualizing-reconstructions-6-points}
   \textbf{Deliverable:} A single figure containing 4 images (2 original
   test images, 2 reconstructed images), clearly labeled.
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Answer}\label{answer-6}
+
+\includegraphics{CS541_HW3_git_files/figure-latex/cs541_hw3_p4_d1a-task4-output-1.png}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 

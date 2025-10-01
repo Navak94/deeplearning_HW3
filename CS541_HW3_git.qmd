@@ -304,6 +304,7 @@ This assignment explores one powerful concept in deep learning: **unsupervised r
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task1 >}}
 
+---
 
 ## Task 2: Autoencoder Architecture (6 points)
 
@@ -320,6 +321,16 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
       * Dense layer with **128 units** followed by a **ReLU** activation.
       * Dense layer with **784 units** followed by a **Sigmoid** activation (`nn.Sigmoid`). The sigmoid activation ensures the output values are in the range $[0.0, 1.0]$, matching the normalized input data.
 
+---
+
+## Answer
+
+
+
+{{< embed cs541_hw3_p4_d1a.ipynb#task2 >}}
+
+---
+
 ## Task 3: Model Training (6 points)
 
 1.  Instantiate your model, a loss function (`nn.MSELoss` is a good choice), and an optimizer (`torch.optim.Adam`).
@@ -330,12 +341,35 @@ Construct a **dense autoencoder model** by creating a class that inherits from `
       * Calculate the loss between the original and reconstructed images.
       * Zero the gradients, perform a backward pass, and update the weights.
 
+---
+
+## Answer
+
+
+
+{{< embed cs541_hw3_p4_d1a.ipynb#task3 >}}
+
+---
+
 ## Task 4: Visualizing Reconstructions (6 points)
 
 1.  Set your model to **evaluation mode**.
 2.  Get a batch of images from the test set and pass them through your trained autoencoder to get the reconstructions.
 3.  Create a plot showing **two different original images** from the test set and their corresponding reconstructions directly below them.
 4.  **Deliverable:** A single figure containing 4 images (2 original test images, 2 reconstructed images), clearly labeled.
+
+---
+
+## Answer
+
+
+
+{{< embed cs541_hw3_p4_d1a.ipynb#task4 >}}
+
+---
+
+
+
 
 -----
 
