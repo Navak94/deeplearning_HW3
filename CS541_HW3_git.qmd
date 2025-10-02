@@ -723,7 +723,10 @@ criterion = nn.CrossEntropyLoss()
 weights = []
 biases = []
 for name, p in enhanced_model.named_parameters():
-    (weights if 'weight' in name else biases).append(p)
+    if "weight" in name:
+        weights.append(p)
+     else:
+         biases.append(p)
 
 optimizer = torch.optim.SGD([
     {'params': weights, 'weight_decay': enhanced_cfg['alpha']},
@@ -733,8 +736,10 @@ optimizer = torch.optim.SGD([
 # retrain enhanced model
 epochs_final = 50
 for epoch in range(epochs_final):
-    t0 = __import__('time').time(); loss, _ = train_epoch(enhanced_model, full_train_loader, criterion, optimizer)
-    test_acc = evaluate(enhanced_model, test_loader); t1 = __import__('time').time()
+    t0 = __import__('time').time() 
+    loss, _ = train_epoch(enhanced_model, full_train_loader, criterion, optimizer)
+    test_acc = evaluate(enhanced_model, test_loader) 
+    t1 = __import__('time').time()
     print(f"Enhanced Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
 
 print(f"Final Enhanced Test Accuracy: {test_acc:.4f}")
