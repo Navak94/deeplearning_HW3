@@ -22,7 +22,6 @@ include-before-body:
       breaklines
       % Note: setting commandchars=\\\{\} here will cause an error 
     }
-
 ---
 
 \btwocol
@@ -33,20 +32,15 @@ include-before-body:
 
 \etwocol
 
-
-# Problem 1: Deriving He's initialization [10 points + 5 bonus pts]
+# Problem 1: Deriving He's initialization \[10 points + 5 bonus pts\]
 
 In Lecture 7, we learned about a widely used technique for setting the initial values of the weight parameters in a neural network: the **He initialization**. Specifically, it samples each weight value from $\mathcal{N}(0,2/n_{l})$—i.e., a 0-mean Gaussian distribution with variance $2/n_{l}$ where $n_{l}$ is the number of columns of the weight matrix $W^{[l]}$ layer $l$ (or, equivalently the dimension of the inputs fed to layer $l$).
 
-Here you are asked to derive some of the steps we skipped in class. We will start from:
-$$Var[z^{[l]}]=Var[w^{[l]}x^{[l]}]=Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]$$
-$$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$
+Here you are asked to derive some of the steps we skipped in class. We will start from: $$Var[z^{[l]}]=Var[w^{[l]}x^{[l]}]=Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]$$ $$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$
 
-1.  (2 points) Explain what are the assumptions that allow us to write:
-    $$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$
-    where $w_{l}$ represents any of the $w_{j}^{[l]}$ weights and $x_{l}$ represents any of the $x_{j}^{[l]}$ inputs.
+1.  (2 points) Explain what are the assumptions that allow us to write: $$Var[\sum_{j=1}^{n_{l}}w_{j}^{[l]}x_{j}^{[l]}]=n_{l}Var[w_{l}x_{l}],$$ where $w_{l}$ represents any of the $w_{j}^{[l]}$ weights and $x_{l}$ represents any of the $x_{j}^{[l]}$ inputs.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
@@ -54,11 +48,9 @@ We are given that He initialization samples weights from $\mathcal{N}(0, 2/n_l)$
 
 $$E[w_j^{[l]}] = 0 \text{ and } \text{Var}[w_j^{[l]}] = 2/n_l \quad \text{(definition of } \mathcal{N}(\mu, \sigma^2))$$
 
-$$\text{Var}\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right] = E\left[\left(\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right)^2\right] - \left(E\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right]\right)^2$$
-$$\text{(Definition of Variance: } \text{Var}[Y] = E[Y^2] - (E[Y])^2)$$
+$$\text{Var}\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right] = E\left[\left(\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right)^2\right] - \left(E\left[\sum_{j=1}^{n_l} w_j^{[l]} x_j^{[l]}\right]\right)^2$$ $$\text{(Definition of Variance: } \text{Var}[Y] = E[Y^2] - (E[Y])^2)$$
 
 ### Assumption 1: $w_j^{[l]}$ independent of all $x_k^{[l]}$
-
 
 To move forward, we need to assume that the weights $w_j^{[l]}$ are independent of the inputs $x_j^{[l]}$. This assumption allows us to factor terms of the form $E[w_j^{[l]} x_j^{[l]}] = E[w_j^{[l]}] \cdot E[x_j^{[l]}].$ Because we know from initialization that $E[w_j^{[l]}] = 0$, the full product is 0 and drops out of the equation.
 
@@ -78,7 +70,7 @@ $$= \sum_{j=1}^{n_l}\sum_{k=1}^{n_l} E[w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}] 
 
 ### Assumption 2: $w_j^{[l]}$ independent of $w_k^{[l]}$ for $j \neq k$
 
-When we expand the squared sum $(\sum_j w_j x_j)^2$, cross-terms of the form $E[w_j x_j w_k x_k]$ appear for $j \neq k$. 
+When we expand the squared sum $(\sum_j w_j x_j)^2$, cross-terms of the form $E[w_j x_j w_k x_k]$ appear for $j \neq k$.
 
 $$
 \text{Var}\!\left[\sum_{j=1}^{n_l} w_j x_j \right]
@@ -99,13 +91,9 @@ E[w_k x_k w_j x_j] & \cdots & \text{Var}[w_{n_l} x_{n_l}]
 \end{bmatrix}
 $$
 
+We can't move forward if these terms exist. Therefore we assume that the weights themselves are independent, meaning knowledge of $w_1^{[l]}$ tells us nothing about $w_2^{[l]}$, and so on. This independence causes these cross-terms to be 0, leaving only the diagonal contributions.
 
-We can't move forward if these terms exist. Therefore we assume that the weights themselves are independent, meaning knowledge of $w_1^{[l]}$ tells us nothing about $w_2^{[l]}$, and so on. This independence causes these cross-terms to be 0, leaving only the diagonal contributions. 
-
-
-Thus, for $j \neq k$:
-$$E[w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}] = E[w_j^{[l]}]E[x_j^{[l]}]E[w_k^{[l]}]E[x_k^{[l]}] = 0 \cdot E[x_j^{[l]}] \cdot 0 \cdot E[x_k^{[l]}] = 0$$
-$$\text{(Independence of all four random variables)}$$
+Thus, for $j \neq k$: $$E[w_j^{[l]} x_j^{[l]} w_k^{[l]} x_k^{[l]}] = E[w_j^{[l]}]E[x_j^{[l]}]E[w_k^{[l]}]E[x_k^{[l]}] = 0 \cdot E[x_j^{[l]}] \cdot 0 \cdot E[x_k^{[l]}] = 0$$ $$\text{(Independence of all four random variables)}$$
 
 $$= \sum_{j=1}^{n_l} E[(w_j^{[l]})^2 (x_j^{[l]})^2] \quad \text{(only diagonal terms } j = k \text{ survive)}$$
 
@@ -121,14 +109,11 @@ To simplify further we must assume that all these weight–input pairs are ident
 
 $$= n_l \cdot \text{Var}[w^{[l]} x^{[l]}] \quad \text{(Identical Distribution: all terms equal)}$$
 
+------------------------------------------------------------------------
 
----
+2.  (4 points) Show that $$Var[w_{l}x_{l}]=Var[w_{l}]\mathbb{E}[(x_{l})^{2}]$$using the following equality regarding the variance of the product of two mutually independent random variables A and B:$$Var[AB]=Var[A]Var[B]+Var[A]\mathbb{E}[B]^{2}+Var[B]\mathbb{E}[A]^{2} \quad (0.0.1)$$You will need to: (i) review and use the assumptions made about the distribution of $w_{l}$ and (ii) use the relationship between variance and second moment for a random variable B:$$Var[B]=\mathbb{E}[B^{2}]-\mathbb{E}[B]^{2}. \quad (0.0.2)$$
 
-
-2.  (4 points) Show that
-    $$Var[w_{l}x_{l}]=Var[w_{l}]\mathbb{E}[(x_{l})^{2}]$$using the following equality regarding the variance of the product of two mutually independent random variables A and B:$$Var[AB]=Var[A]Var[B]+Var[A]\mathbb{E}[B]^{2}+Var[B]\mathbb{E}[A]^{2} \quad (0.0.1)$$You will need to: (i) review and use the assumptions made about the distribution of $w_{l}$ and (ii) use the relationship between variance and second moment for a random variable B:$$Var[B]=\mathbb{E}[B^{2}]-\mathbb{E}[B]^{2}. \quad (0.0.2)$$
-
----
+------------------------------------------------------------------------
 
 ## Answer
 
@@ -148,22 +133,18 @@ $$= \text{Var}[w^{[l]}] + 0^2 = \text{Var}[w^{[l]}]$$
 
 $$\therefore \text{Var}[w^{[l]} x^{[l]}] = \text{Var}[w^{[l]}] \cdot E[(x^{[l]})^2]$$
 
+------------------------------------------------------------------------
 
----
-
-3.  Last, you need to relate the variance of the input $x_{l}$ with the variance of the pre-activation value $z_{l-1}$ when the activation function is **ReLU**, i.e. when $x_{l}=ReLU(z_{l-1})=ReLU(w_{l-1}x_{l-1}+b_{l-1})$. Specifically, you need to prove the relationship:
-    $$Var[z_{l-1}]=2\times\mathbb{E}[x_{l}^{2}].$$
-    To do so, you will need to use these assumptions:
+3.  Last, you need to relate the variance of the input $x_{l}$ with the variance of the pre-activation value $z_{l-1}$ when the activation function is **ReLU**, i.e. when $x_{l}=ReLU(z_{l-1})=ReLU(w_{l-1}x_{l-1}+b_{l-1})$. Specifically, you need to prove the relationship: $$Var[z_{l-1}]=2\times\mathbb{E}[x_{l}^{2}].$$ To do so, you will need to use these assumptions:
 
 <!-- end list -->
 
-  * $w_{l-1}$ has a **symmetric distribution around 0**, i.e., the density $f_{w_{l-1}}(w)=f_{w_{l-1}}(-w).$
-  * $b_{l-1}=0$
+-   $w_{l-1}$ has a **symmetric distribution around 0**, i.e., the density $f_{w_{l-1}}(w)=f_{w_{l-1}}(-w).$
+-   $b_{l-1}=0$
 
 As a guide, try to answer these questions in order:
 
 (a) (2 points) What is the expected value of ${z_{l-1}}$? Does it depend on the value of ${x_{l-1}}?$
-
 
 (b) (1 point) Think of $x_{l-1}$ as a constant. What is the density $f_{z_{l-1}}(z)!$
 
@@ -173,10 +154,9 @@ As a guide, try to answer these questions in order:
 
 (e) (BONUS: 2 points) Last, starting from the definition of the second moment $\mathbb{E}[x_{l}^{2}]=\int_{-\infty}^{\infty}x_{l}^{2}f_{x_{l}}(x)d_{x}$ , find ways to replace $x_{l}$ by $z_{l-1}$ conditioning on whether $z_{l-1}$ is negative or positive. You should be able to find the expression you derived in item (d) for $Var[z_{l-1}]$.
 
----
+------------------------------------------------------------------------
 
 ## Answer
-
 
 ### (a) Expected value of $z_{l-1}$:
 
@@ -194,14 +174,11 @@ $$= \sum_{k=1}^{n_{l-1}} 0 \cdot E[x_k^{[l-1]}] = 0 \quad \text{(He initializati
 
 $$z_{l-1} = w_{l-1} \cdot x_{l-1} \quad \text{(treating } x_{l-1} \text{ as constant scalar)}$$
 
-$$f_{z_{l-1}|x_{l-1}}(z) = \frac{1}{|x_{l-1}|} f_{w_{l-1}}\left(\frac{z}{x_{l-1}}\right)$$
-$$\text{(Change of Variables Formula: if } Y = aX, \text{ then } f_Y(y) = \frac{1}{|a|}f_X(y/a))$$
+$$f_{z_{l-1}|x_{l-1}}(z) = \frac{1}{|x_{l-1}|} f_{w_{l-1}}\left(\frac{z}{x_{l-1}}\right)$$ $$\text{(Change of Variables Formula: if } Y = aX, \text{ then } f_Y(y) = \frac{1}{|a|}f_X(y/a))$$
 
 ### (c) Symmetry:
 
-Given: $w_{l-1} \sim \mathcal{N}(0, \sigma^2)$
-$$\Rightarrow f_{w_{l-1}}(w) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-w^2/(2\sigma^2)} = f_{w_{l-1}}(-w)$$
-$$\text{(Gaussian PDF is symmetric about its mean)}$$
+Given: $w_{l-1} \sim \mathcal{N}(0, \sigma^2)$ $$\Rightarrow f_{w_{l-1}}(w) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-w^2/(2\sigma^2)} = f_{w_{l-1}}(-w)$$ $$\text{(Gaussian PDF is symmetric about its mean)}$$
 
 $$f_{z_{l-1}}(z) = f_{z_{l-1}}(-z) \quad \text{(Linear transformation preserves symmetry)}$$
 
@@ -213,11 +190,9 @@ $$E[z_{l-1}^2] = \int_{-\infty}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Defi
 
 $$= \int_{-\infty}^{0} z^2 f_{z_{l-1}}(z) dz + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Additivity of Integrals)}$$
 
-$$= \int_{0}^{\infty} u^2 f_{z_{l-1}}(-u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$
-$$\text{(U-Substitution Rule for Integrals: Let $u = -z$ in first integral, then $du = -dz$)}$$
+$$= \int_{0}^{\infty} u^2 f_{z_{l-1}}(-u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$ $$\text{(U-Substitution Rule for Integrals: Let $u = -z$ in first integral, then $du = -dz$)}$$
 
-$$= \int_{0}^{\infty} u^2 f_{z_{l-1}}(u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$
-$$\text{(Using symmetry: } f_{z_{l-1}}(-u) = f_{z_{l-1}}(u))$$
+$$= \int_{0}^{\infty} u^2 f_{z_{l-1}}(u) du + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$ $$\text{(Using symmetry: } f_{z_{l-1}}(-u) = f_{z_{l-1}}(u))$$
 
 $$= 2 \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz \quad \text{(Both integrals are identical)}$$
 
@@ -227,8 +202,7 @@ $$x_l = \text{ReLU}(z_{l-1}) = \begin{cases} z_{l-1} & \text{if } z_{l-1} > 0 \\
 
 $$E[x_l^2] = \int_{-\infty}^{\infty} [\text{ReLU}(z)]^2 f_{z_{l-1}}(z) dz \quad \text{(Definition of Expectation)}$$
 
-$$= \int_{-\infty}^{0} 0^2 \cdot f_{z_{l-1}}(z) dz + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$
-$$\text{(ReLU}(z) = 0 \text{ for } z \leq 0, \text{ ReLU}(z) = z \text{ for } z > 0)$$
+$$= \int_{-\infty}^{0} 0^2 \cdot f_{z_{l-1}}(z) dz + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$ $$\text{(ReLU}(z) = 0 \text{ for } z \leq 0, \text{ ReLU}(z) = z \text{ for } z > 0)$$
 
 $$= 0 + \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz = \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$$
 
@@ -236,38 +210,27 @@ From part (d): $\text{Var}[z_{l-1}] = 2 \int_{0}^{\infty} z^2 f_{z_{l-1}}(z) dz$
 
 $$\therefore \text{Var}[z_{l-1}] = 2 \cdot E[x_l^2]$$
 
+------------------------------------------------------------------------
 
-
------
-
-# Problem 2: Training NNs with pytorch [15 points + 2 bonus pts]
+# Problem 2: Training NNs with pytorch \[15 points + 2 bonus pts\]
 
 In this problem you will use pytorch to train a multi-layer neural network to classify images of fashion items (10 different classes) from the **Fashion MNIST** dataset. Similarly to Homework 2, the input to the network will be a $28\times28$ pixel image; the output will be a real number.
 
-Specifically, the starting network you will create should implement a function $f:\mathbb{R}^{784}\rightarrow\mathbb{R}^{10},$ where:
-$$\begin{aligned}z^{(1)}&=W^{(1)}x+b^{(1)}\\ h^{(1)}&=ReLU(z^{(1)})\\ z^{(2)}&=W^{(2)}h^{(1)}+b^{(2)}\\ &:\end{aligned}$$
-$$\begin{aligned}z^{(l)}&=W^{(l)}h^{(l-1)}+b^{(l)}\\ \hat{y}&=softmax(z^{(l)})\end{aligned}$$
+Specifically, the starting network you will create should implement a function $f:\mathbb{R}^{784}\rightarrow\mathbb{R}^{10},$ where: $$\begin{aligned}z^{(1)}&=W^{(1)}x+b^{(1)}\\ h^{(1)}&=ReLU(z^{(1)})\\ z^{(2)}&=W^{(2)}h^{(1)}+b^{(2)}\\ &:\end{aligned}$$ $$\begin{aligned}z^{(l)}&=W^{(l)}h^{(l-1)}+b^{(l)}\\ \hat{y}&=softmax(z^{(l)})\end{aligned}$$
 
 The network specified above is shown in the figure below:
 
+As usual, the (unregularized) cross-entropy cost function should be: $$f_{CE}(W^{(1)},b^{(1)},...,W^{(l)},b^{(l)})=-\frac{1}{n}\sum_{i=1}^{n}\sum_{k=1}^{10}y_{k}^{(i)}log\hat{y}_{k}^{(i)}$$ where $n$ is the number of examples.
 
-As usual, the (unregularized) cross-entropy cost function should be:
-$$f_{CE}(W^{(1)},b^{(1)},...,W^{(l)},b^{(l)})=-\frac{1}{n}\sum_{i=1}^{n}\sum_{k=1}^{10}y_{k}^{(i)}log\hat{y}_{k}^{(i)}$$
-where $n$ is the number of examples.
-
-The Fashion MNIST dataset can be obtained from the following web links:
-[https://s3.amazonaws.com/jrwprojects/fashion\_mnist\_train\_images.npy](https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_images.npy)
-[https://s3.amazonaws.com/jrwprojects/fashion\_mnist\_train\_labels.npy](https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_labels.npy)
-[https://s3.amazonaws.com/jrwprojects/fashion\_mnist\_test\_images.npy](https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_images.npy)
-[https://s3.amazonaws.com/jrwprojects/fashion\_mnist\_test\_labels.npy](https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_labels.npy)
+The Fashion MNIST dataset can be obtained from the following web links: <https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_images.npy> <https://s3.amazonaws.com/jrwprojects/fashion_mnist_train_labels.npy> <https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_images.npy> <https://s3.amazonaws.com/jrwprojects/fashion_mnist_test_labels.npy>
 
 1.  (6 points) Implement the same network using PyTorch or Tensorflow.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 import numpy as np
 import torch
 import torch.nn as nn
@@ -407,30 +370,27 @@ full_train = TensorDataset(X_train_t, y_train_t)
 val_size = int(0.2 * len(full_train))
 train_size = len(full_train) - val_size
 train_dataset, val_dataset = random_split(full_train, [train_size, val_size])
-
 ```
 
+------------------------------------------------------------------------
 
+2.  (5 points) Implement a method called **hyperparam_tuning**. Optimize the hyperparameters by training on the training set and selecting the parameter settings that optimize performance on the validation set. You should systematically (i.e., in code) try at least **10** (in total, not for each hyperparameter) different hyperparameter settings; **Hyperparameter tuning:** In this problem, there are several different hyperparameters that will impact the network's performance:
 
----
+    -   (Required) **Number of hidden layers** (suggestions: $\{3,4,5\}$)
+    -   **Number of units in each hidden layer** (suggestions: $\{30,40,50\}$)
+    -   **Learning rate** (suggestions: $\{0.001, 0.005, 0.01, 0.05, 0.1, 0.5\}$)
+    -   **Minibatch size** (suggestions: $\{16,32, 64, 128, 256\}$)
+    -   **Number of epochs**
+    -   $L_{2}$ **Regularization strength** applied to the weight matrices (but not bias terms) In order not to "cheat" and thus overestimate the performance of the network it is crucial to optimize the hyperparameters **only on the validation set**; do **not** use the test set. (The training set would be ok, but typically leads to worse performance.) Hence, just like in Homework 2, you should fork off part of the training set into a validation portion.
 
-2.  (5 points) Implement a method called **hyperparam\_tuning**. Optimize the hyperparameters by training on the training set and selecting the parameter settings that optimize performance on the validation set. You should systematically (i.e., in code) try at least **10** (in total, not for each hyperparameter) different hyperparameter settings;
-    **Hyperparameter tuning:** In this problem, there are several different hyperparameters that will impact the network's performance:
-
-      * (Required) **Number of hidden layers** (suggestions: $\{3,4,5\}$)
-      * **Number of units in each hidden layer** (suggestions: $\{30,40,50\}$)
-      * **Learning rate** (suggestions: $\{0.001, 0.005, 0.01, 0.05, 0.1, 0.5\}$)
-      * **Minibatch size** (suggestions: $\{16,32, 64, 128, 256\}$)
-      * **Number of epochs**
-      * $L_{2}$ **Regularization strength** applied to the weight matrices (but not bias terms)
-        In order not to "cheat" and thus overestimate the performance of the network it is crucial to optimize the hyperparameters **only on the validation set**; do **not** use the test set. (The training set would be ok, but typically leads to worse performance.) Hence, just like in Homework 2, you should fork off part of the training set into a validation portion.
-
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
-#| label: prob2_2
+``` python
+else:
+        biases.append(p)
+#| #| label: prob2_2
 
 def hyperparam_tuning(train_dataset, val_dataset, seed=541):
     """Systematically search hyperparameters and return the best config and model state.
@@ -490,11 +450,17 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
         ############################################################################# 
 
 
-        weight_params =[]
-        bias_params = []
+        weights =[]
+        biases = []
+        
         for name, p in model.named_parameters():
-            (weight_params if 'weight' in name else bias_params).append(p)
-        optimizer = torch.optim.SGD([{'params': weight_params, 'weight_decay': aplha_choice},{'params': bias_params,   'weight_decay': 0.0}],lr=learning_rate_choice)
+            
+            if "weight" in name:
+                weights.append(p)
+            else:
+                biases.append(p)
+            
+        optimizer = torch.optim.SGD([{'params': weights, 'weight_decay': aplha_choice},{'params': biases,   'weight_decay': 0.0}],lr=learning_rate_choice)
 
 
 
@@ -538,21 +504,19 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
 best_cfg, best_acc = hyperparam_tuning(train_dataset, val_dataset)
 print(f"Best config: {best_cfg} with val_acc={best_acc:.4f}")
 
-
 ```
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_2 >}}
 
-
----
+------------------------------------------------------------------------
 
 3.  (4 points) After you have optimized your hyperparameters, then re-train your network again and show a screenshot displaying the training loss evolving over the last **20 iterations** of SGD. (You can pick the last 20 mini-batches or last 20 epochs; it's up to you). In addition, make sure your screenshot also displays the **test accuracy** of the final trained classifier. The accuracy (percentage correctly classified test images) should be **at least 87%**.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 
 # Retrain best model on full training set (train+val) for more epochs
 n_features = X_train.shape[1]
@@ -598,22 +562,19 @@ for epoch in range(epochs_final):
 print(f"Length of parameter history: {len(parameter_history)}")
 print(f"Final Test Accuracy: {test_acc:.4f}")
 
-
 ```
-
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_3 >}}
 
----
-
+------------------------------------------------------------------------
 
 4.  (2 bonus points) Now you have to experiment with a variant of the previous network that includes either **BatchNorm, Dropout layers** or **different activation functions** (e.g., LeakyReLU, ELU or PReLU). Find an architecture that outperforms the one you found in item 3 and report the test accuracy.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 
 def build_enhanced_mlp(input_dim, n_layers, hidden_units, output_dim,
                        use_batchnorm=False, dropout_rate=0.0, activation='relu'):
@@ -691,14 +652,19 @@ def enhanced_hyperparam_tuning(train_dataset, val_dataset, seed=541):
         model = build_enhanced_mlp(n_features, layer_choice, hidden_choice, n_classes,
                                   use_batchnorm=use_bn, dropout_rate=dropout, activation=activation)
 
-        weight_params = []
-        bias_params = []
+        weights = []
+        biases = []
+        
         for name, p in model.named_parameters():
-            (weight_params if 'weight' in name else bias_params).append(p)
-
+            
+            if "weight" in name:
+                weights.append(p)
+            else:
+                biases.append(p)
+                
         optimizer = torch.optim.SGD([
-            {'params': weight_params, 'weight_decay': alpha_choice},
-            {'params': bias_params, 'weight_decay': 0.0}
+            {'params': weights, 'weight_decay': alpha_choice},
+            {'params': biases, 'weight_decay': 0.0}
         ], lr=learning_rate_choice)
 
         criterion = nn.CrossEntropyLoss()
@@ -753,14 +719,14 @@ full_train_loader = DataLoader(full_train, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
 criterion = nn.CrossEntropyLoss()
 
-weight_params = []
-bias_params = []
+weights = []
+biases = []
 for name, p in enhanced_model.named_parameters():
-    (weight_params if 'weight' in name else bias_params).append(p)
+    (weights if 'weight' in name else biases).append(p)
 
 optimizer = torch.optim.SGD([
-    {'params': weight_params, 'weight_decay': enhanced_cfg['alpha']},
-    {'params': bias_params, 'weight_decay': 0.0}
+    {'params': weights, 'weight_decay': enhanced_cfg['alpha']},
+    {'params': biases, 'weight_decay': 0.0}
 ], lr=enhanced_cfg['learning_rate'])
 
 # retrain enhanced model
@@ -771,13 +737,11 @@ for epoch in range(epochs_final):
     print(f"Enhanced Train Epoch {epoch+1}/{epochs_final}: loss={loss:.4f}, test_acc={test_acc:.4f}, time={t1-t0:.1f}s")
 
 print(f"Final Enhanced Test Accuracy: {test_acc:.4f}")
-
 ```
-
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_4 >}}
 
----
+------------------------------------------------------------------------
 
 # Problem 3: Visualizing the loss landscape and optimization trajectories (15 points)
 
@@ -787,11 +751,11 @@ Visualize the SGD trajectory of your network when trained on Fashion MNIST:
 
 2.  Superimpose a scatter plot of the different points (in the neural network's parameter space) that were reached during SGD (just sample a few times per epoch). To accelerate the rendering, train the network and plot the surface using just a small subset of the training data (e.g., 2500 examples) to estimate $f_{CE}$. See the starter code, in particular the `plotPath` function, for an example of 3-D plotting. Submit your graph in the PDF file and the code in the Python file.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 def plotPath(loader, trajectory, model):
     # TODO: change this toy plot to show a 2-d projection of the weight space
     # along with the associated loss (cross-entropy), plus a superimposed
@@ -846,14 +810,11 @@ def plotPath(loader, trajectory, model):
 plotPath(full_train_loader, parameter_history, best_model)
 ```
 
-
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob3 >}}
 
 The visualization shows that the neural network optimization follows a clear descent path through the loss landscape. The PCA projection allows us to see the optimization dynamics in a reduced (and therefore visualizable) dimension. It shows how SGD navigates from high-loss regions (initialization) down into a valley or local minimum. The curved shows that SGD doesn't take the shortest path but rather follows the gradient, making consistent but progressivly more mythodical progress toward lower loss. The concentration of trajectory points near the aparent minimum shows successful convergence of the training process.
 
----
-
-
+------------------------------------------------------------------------
 
 # Problem 4: Autoencoder (20 points)
 
@@ -865,11 +826,11 @@ This assignment explores one powerful concept in deep learning: **unsupervised r
 2.  Use `torchvision.transforms.ToTensor` to convert the images to PyTorch tensors and normalize the pixel values to be in the range $[0.0, 1.0]$.
 3.  Create a `DataLoader` for both the training and test sets. For this unsupervised task, we only need the image data, not the labels.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 # Task 1
 
 def prepare_data(batch_size: int = 128):
@@ -895,33 +856,32 @@ def prepare_data(batch_size: int = 128):
 
 # run task 1
 train_loader, test_loader = prepare_data(batch_size=128)
-
 ```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task1 >}}
 
----
+------------------------------------------------------------------------
 
 ## Task 2: Autoencoder Architecture (6 points)
 
 Construct a **dense autoencoder model** by creating a class that inherits from `torch.nn.Module`. The model should consist of an **encoder** and a **decoder** with the following symmetric architecture:
 
-  * **An Encoder** that takes a flattened 784-dimensional input and maps it to a compressed representation.
+-   **An Encoder** that takes a flattened 784-dimensional input and maps it to a compressed representation.
 
-      * Input layer (implicitly defined by the input shape).
-      * Dense layer (`nn.Linear`) with **128 units** followed by a **ReLU** activation (`nn.ReLU`).
-      * Dense layer with **64 units** followed by a **ReLU** activation. This layer's output is the **latent representation**, also known as the "**bottleneck**".
+    -   Input layer (implicitly defined by the input shape).
+    -   Dense layer (`nn.Linear`) with **128 units** followed by a **ReLU** activation (`nn.ReLU`).
+    -   Dense layer with **64 units** followed by a **ReLU** activation. This layer's output is the **latent representation**, also known as the "**bottleneck**".
 
-  * **A Decoder** that takes the 64-dimensional latent representation and reconstructs the 784-dimensional image.
+-   **A Decoder** that takes the 64-dimensional latent representation and reconstructs the 784-dimensional image.
 
-      * Dense layer with **128 units** followed by a **ReLU** activation.
-      * Dense layer with **784 units** followed by a **Sigmoid** activation (`nn.Sigmoid`). The sigmoid activation ensures the output values are in the range $[0.0, 1.0]$, matching the normalized input data.
+    -   Dense layer with **128 units** followed by a **ReLU** activation.
+    -   Dense layer with **784 units** followed by a **Sigmoid** activation (`nn.Sigmoid`). The sigmoid activation ensures the output values are in the range $[0.0, 1.0]$, matching the normalized input data.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 # Task 2
 
 class Autoencoder(nn.Module):
@@ -948,29 +908,27 @@ params = sum(p.numel() for p in model.parameters())
 print("Model ready")
 print(f"- parameters: {params:,}")
 
-
 ```
-
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task2 >}}
 
----
+------------------------------------------------------------------------
 
 ## Task 3: Model Training (6 points)
 
 1.  Instantiate your model, a loss function (`nn.MSELoss` is a good choice), and an optimizer (`torch.optim.Adam`).
 2.  Write a training loop that iterates for **20 epochs**. In each epoch, iterate through the training `DataLoader`.
 3.  For each batch of images, you must:
-      * Flatten the $28\times28$ images into 784-dimensional vectors.
-      * Perform a forward pass to get the reconstructed images.
-      * Calculate the loss between the original and reconstructed images.
-      * Zero the gradients, perform a backward pass, and update the weights.
+    -   Flatten the $28\times28$ images into 784-dimensional vectors.
+    -   Perform a forward pass to get the reconstructed images.
+    -   Calculate the loss between the original and reconstructed images.
+    -   Zero the gradients, perform a backward pass, and update the weights.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 # Task 3
 
 def train_autoencoder(model: nn.Module, loader: DataLoader, epochs: int = 20, lr: float = 1e-3):
@@ -1007,12 +965,11 @@ def train_autoencoder(model: nn.Module, loader: DataLoader, epochs: int = 20, lr
 
 # run task 3
 model, losses = train_autoencoder(model, train_loader, epochs=20, lr=1e-3)
-
 ```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task3 >}}
 
----
+------------------------------------------------------------------------
 
 ## Task 4: Visualizing Reconstructions (6 points)
 
@@ -1021,11 +978,11 @@ model, losses = train_autoencoder(model, train_loader, epochs=20, lr=1e-3)
 3.  Create a plot showing **two different original images** from the test set and their corresponding reconstructions directly below them.
 4.  **Deliverable:** A single figure containing 4 images (2 original test images, 2 reconstructed images), clearly labeled.
 
----
+------------------------------------------------------------------------
 
 ## Answer
 
-```python
+``` python
 # Task 4
 
 def visualize_reconstructions(model: nn.Module, test_loader: DataLoader, num_images: int = 2):
@@ -1052,24 +1009,17 @@ def visualize_reconstructions(model: nn.Module, test_loader: DataLoader, num_ima
 # run task 4
 visualize_reconstructions(model, test_loader, num_images=2)
 
-
 ```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task4 >}}
 
----
-
-
-
-
-
-
+------------------------------------------------------------------------
 
 # Submission
 
 Submit one PDF file that includes your notes for the theoretical problems (scanned or typed) and screenshots of your code for the programming problems. All material in the submitted PDF must be presented in a clear and readable format.
 
-If you are working as part of a group, then indicate the members on canvas: [https://canvas.wpi.edu/courses/76771/groups\#tab-14853](https://www.google.com/search?q=https://canvas.wpi.edu/courses/76771/groups%23tab-14853). Once you do that, be aware that any submission from a team member will overwrite an existing one.
+If you are working as part of a group, then indicate the members on canvas: [https://canvas.wpi.edu/courses/76771/groups#tab-14853](https://www.google.com/search?q=https://canvas.wpi.edu/courses/76771/groups%23tab-14853). Once you do that, be aware that any submission from a team member will overwrite an existing one.
 
 ## Teamwork
 
