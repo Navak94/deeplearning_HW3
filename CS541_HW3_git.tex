@@ -745,7 +745,9 @@ The Fashion MNIST dataset can be obtained from the following web links:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#| label: prob2\_2}
+\ControlFlowTok{else}\NormalTok{:}
+\NormalTok{        biases.append(p)}
+\CommentTok{\#| \#| label: prob2\_2}
 
 \KeywordTok{def}\NormalTok{ hyperparam\_tuning(train\_dataset, val\_dataset, seed}\OperatorTok{=}\DecValTok{541}\NormalTok{):}
     \CommentTok{"""Systematically search hyperparameters and return the best config and model state.}
@@ -805,11 +807,17 @@ The Fashion MNIST dataset can be obtained from the following web links:
         \CommentTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\# }
 
 
-\NormalTok{        weight\_params }\OperatorTok{=}\NormalTok{[]}
-\NormalTok{        bias\_params }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{        weights }\OperatorTok{=}\NormalTok{[]}
+\NormalTok{        biases }\OperatorTok{=}\NormalTok{ []}
+        
         \ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ model.named\_parameters():}
-\NormalTok{            (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
-\NormalTok{        optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: aplha\_choice\},\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params,   }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}],lr}\OperatorTok{=}\NormalTok{learning\_rate\_choice)}
+            
+            \ControlFlowTok{if} \StringTok{"weight"} \KeywordTok{in}\NormalTok{ name:}
+\NormalTok{                weights.append(p)}
+            \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{                biases.append(p) }
+            
+\NormalTok{        optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weights, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: aplha\_choice\},\{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: biases,   }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}],lr}\OperatorTok{=}\NormalTok{learning\_rate\_choice)}
 
 
 
@@ -852,7 +860,6 @@ The Fashion MNIST dataset can be obtained from the following web links:
 \CommentTok{\# Run hyperparameter tuning}
 \NormalTok{best\_cfg, best\_acc }\OperatorTok{=}\NormalTok{ hyperparam\_tuning(train\_dataset, val\_dataset)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Best config: }\SpecialCharTok{\{}\NormalTok{best\_cfg}\SpecialCharTok{\}}\SpecialStringTok{ with val\_acc=}\SpecialCharTok{\{}\NormalTok{best\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -928,8 +935,11 @@ Best config: {'layers': 3, 'hidden': 40, 'batch': 16, 'learning_rate': 0.01, 'al
 \ControlFlowTok{for}\NormalTok{ epoch }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epochs\_final):}
     \CommentTok{\# }\RegionMarkerTok{BEGIN}\CommentTok{ YOUR CODE HERE (\textasciitilde{}2 lines)}
 
-\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}\OperatorTok{;}\NormalTok{ loss, flat\_params }\OperatorTok{=}\NormalTok{ train\_epoch(best\_model, full\_train\_loader, criterion, optimizer)}
-\NormalTok{    parameter\_history.append(flat\_params)}\OperatorTok{;}\NormalTok{ test\_acc }\OperatorTok{=}\NormalTok{ evaluate(best\_model, test\_loader)}\OperatorTok{;}\NormalTok{ t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
+\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
+\NormalTok{    loss, flat\_params }\OperatorTok{=}\NormalTok{ train\_epoch(best\_model, full\_train\_loader, criterion, optimizer)}
+\NormalTok{    parameter\_history.append(flat\_params) }
+\NormalTok{    test\_acc }\OperatorTok{=}\NormalTok{ evaluate(best\_model, test\_loader)}
+\NormalTok{    t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
 
 
     \CommentTok{\# }\RegionMarkerTok{END}\CommentTok{ YOUR CODE HERE}
@@ -938,7 +948,6 @@ Best config: {'layers': 3, 'hidden': 40, 'batch': 16, 'learning_rate': 0.01, 'al
 \CommentTok{\# Print the length of the parameter\_history list}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Length of parameter history: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(parameter\_history)}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Final Test Accuracy: }\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -1095,14 +1104,19 @@ Final Test Accuracy: 0.8771
 \NormalTok{        model }\OperatorTok{=}\NormalTok{ build\_enhanced\_mlp(n\_features, layer\_choice, hidden\_choice, n\_classes,}
 \NormalTok{                                  use\_batchnorm}\OperatorTok{=}\NormalTok{use\_bn, dropout\_rate}\OperatorTok{=}\NormalTok{dropout, activation}\OperatorTok{=}\NormalTok{activation)}
 
-\NormalTok{        weight\_params }\OperatorTok{=}\NormalTok{ []}
-\NormalTok{        bias\_params }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{        weights }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{        biases }\OperatorTok{=}\NormalTok{ []}
+        
         \ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ model.named\_parameters():}
-\NormalTok{            (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
-
+            
+            \ControlFlowTok{if} \StringTok{"weight"} \KeywordTok{in}\NormalTok{ name:}
+\NormalTok{                weights.append(p)}
+            \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{                biases.append(p)}
+                
 \NormalTok{        optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([}
-\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: alpha\_choice\},}
-\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
+\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weights, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: alpha\_choice\},}
+\NormalTok{            \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: biases, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
 \NormalTok{        ], lr}\OperatorTok{=}\NormalTok{learning\_rate\_choice)}
 
 \NormalTok{        criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
@@ -1157,21 +1171,26 @@ Final Test Accuracy: 0.8771
 \NormalTok{test\_loader }\OperatorTok{=}\NormalTok{ DataLoader(TensorDataset(X\_test\_t, y\_test\_t), batch\_size}\OperatorTok{=}\NormalTok{batch\_size, shuffle}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
 \NormalTok{criterion }\OperatorTok{=}\NormalTok{ nn.CrossEntropyLoss()}
 
-\NormalTok{weight\_params }\OperatorTok{=}\NormalTok{ []}
-\NormalTok{bias\_params }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{weights }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{biases }\OperatorTok{=}\NormalTok{ []}
 \ControlFlowTok{for}\NormalTok{ name, p }\KeywordTok{in}\NormalTok{ enhanced\_model.named\_parameters():}
-\NormalTok{    (weight\_params }\ControlFlowTok{if} \StringTok{\textquotesingle{}weight\textquotesingle{}} \KeywordTok{in}\NormalTok{ name }\ControlFlowTok{else}\NormalTok{ bias\_params).append(p)}
+    \ControlFlowTok{if} \StringTok{"weight"} \KeywordTok{in}\NormalTok{ name:}
+\NormalTok{        weights.append(p)}
+     \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{         biases.append(p)}
 
 \NormalTok{optimizer }\OperatorTok{=}\NormalTok{ torch.optim.SGD([}
-\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weight\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: enhanced\_cfg[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{]\},}
-\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: bias\_params, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
+\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: weights, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: enhanced\_cfg[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{]\},}
+\NormalTok{    \{}\StringTok{\textquotesingle{}params\textquotesingle{}}\NormalTok{: biases, }\StringTok{\textquotesingle{}weight\_decay\textquotesingle{}}\NormalTok{: }\FloatTok{0.0}\NormalTok{\}}
 \NormalTok{], lr}\OperatorTok{=}\NormalTok{enhanced\_cfg[}\StringTok{\textquotesingle{}learning\_rate\textquotesingle{}}\NormalTok{])}
 
 \CommentTok{\# retrain enhanced model}
 \NormalTok{epochs\_final }\OperatorTok{=} \DecValTok{50}
 \ControlFlowTok{for}\NormalTok{ epoch }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(epochs\_final):}
-\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}\OperatorTok{;}\NormalTok{ loss, \_ }\OperatorTok{=}\NormalTok{ train\_epoch(enhanced\_model, full\_train\_loader, criterion, optimizer)}
-\NormalTok{    test\_acc }\OperatorTok{=}\NormalTok{ evaluate(enhanced\_model, test\_loader)}\OperatorTok{;}\NormalTok{ t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
+\NormalTok{    t0 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time() }
+\NormalTok{    loss, \_ }\OperatorTok{=}\NormalTok{ train\_epoch(enhanced\_model, full\_train\_loader, criterion, optimizer)}
+\NormalTok{    test\_acc }\OperatorTok{=}\NormalTok{ evaluate(enhanced\_model, test\_loader) }
+\NormalTok{    t1 }\OperatorTok{=} \BuiltInTok{\_\_import\_\_}\NormalTok{(}\StringTok{\textquotesingle{}time\textquotesingle{}}\NormalTok{).time()}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Enhanced Train Epoch }\SpecialCharTok{\{}\NormalTok{epoch}\OperatorTok{+}\DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{/}\SpecialCharTok{\{}\NormalTok{epochs\_final}\SpecialCharTok{\}}\SpecialStringTok{: loss=}\SpecialCharTok{\{}\NormalTok{loss}\SpecialCharTok{:.4f\}}\SpecialStringTok{, test\_acc=}\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{, time=}\SpecialCharTok{\{}\NormalTok{t1}\OperatorTok{{-}}\NormalTok{t0}\SpecialCharTok{:.1f\}}\SpecialStringTok{s"}\NormalTok{)}
 
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Final Enhanced Test Accuracy: }\SpecialCharTok{\{}\NormalTok{test\_acc}\SpecialCharTok{:.4f\}}\SpecialStringTok{"}\NormalTok{)}
@@ -1423,7 +1442,8 @@ point)}\label{task-1-data-preparation-2-point}
 
 \phantomsection\label{task1}
 \begin{verbatim}
-n/Data ready
+
+Data:
 - train samples: 60000
 - test samples : 10000
 - image shape  : torch.Size([1, 28, 28])
@@ -1505,7 +1525,6 @@ architecture:
 \NormalTok{params }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{(p.numel() }\ControlFlowTok{for}\NormalTok{ p }\KeywordTok{in}\NormalTok{ model.parameters())}
 \BuiltInTok{print}\NormalTok{(}\StringTok{"Model ready"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"{-} parameters: }\SpecialCharTok{\{}\NormalTok{params}\SpecialCharTok{:,\}}\SpecialStringTok{"}\NormalTok{)}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -1593,125 +1612,125 @@ points)}\label{task-3-model-training-6-points}
 \phantomsection\label{task3}
 \begin{verbatim}
 Training on cuda for 20 epochs
-  epoch  1 | batch    0/469 | loss 0.1714
-  epoch  1 | batch  100/469 | loss 0.0410
-  epoch  1 | batch  200/469 | loss 0.0289
-  epoch  1 | batch  300/469 | loss 0.0250
-  epoch  1 | batch  400/469 | loss 0.0228
-  epoch  1 complete | avg loss 0.0374
-  epoch  2 | batch    0/469 | loss 0.0212
-  epoch  2 | batch  100/469 | loss 0.0196
-  epoch  2 | batch  200/469 | loss 0.0210
-  epoch  2 | batch  300/469 | loss 0.0218
-  epoch  2 | batch  400/469 | loss 0.0195
-  epoch  2 complete | avg loss 0.0198
-  epoch  3 | batch    0/469 | loss 0.0173
-  epoch  3 | batch  100/469 | loss 0.0168
-  epoch  3 | batch  200/469 | loss 0.0161
-  epoch  3 | batch  300/469 | loss 0.0163
-  epoch  3 | batch  400/469 | loss 0.0155
-  epoch  3 complete | avg loss 0.0172
-  epoch  4 | batch    0/469 | loss 0.0167
-  epoch  4 | batch  100/469 | loss 0.0159
-  epoch  4 | batch  200/469 | loss 0.0151
-  epoch  4 | batch  300/469 | loss 0.0149
-  epoch  4 | batch  400/469 | loss 0.0153
-  epoch  4 complete | avg loss 0.0156
-  epoch  5 | batch    0/469 | loss 0.0158
-  epoch  5 | batch  100/469 | loss 0.0156
-  epoch  5 | batch  200/469 | loss 0.0147
-  epoch  5 | batch  300/469 | loss 0.0141
-  epoch  5 | batch  400/469 | loss 0.0151
-  epoch  5 complete | avg loss 0.0145
-  epoch  6 | batch    0/469 | loss 0.0133
-  epoch  6 | batch  100/469 | loss 0.0143
-  epoch  6 | batch  200/469 | loss 0.0126
+  epoch  1 | batch    0/469 | loss 0.1683
+  epoch  1 | batch  100/469 | loss 0.0449
+  epoch  1 | batch  200/469 | loss 0.0267
+  epoch  1 | batch  300/469 | loss 0.0231
+  epoch  1 | batch  400/469 | loss 0.0232
+  epoch  1 complete | avg loss 0.0375
+  epoch  2 | batch    0/469 | loss 0.0220
+  epoch  2 | batch  100/469 | loss 0.0206
+  epoch  2 | batch  200/469 | loss 0.0188
+  epoch  2 | batch  300/469 | loss 0.0195
+  epoch  2 | batch  400/469 | loss 0.0180
+  epoch  2 complete | avg loss 0.0196
+  epoch  3 | batch    0/469 | loss 0.0184
+  epoch  3 | batch  100/469 | loss 0.0178
+  epoch  3 | batch  200/469 | loss 0.0167
+  epoch  3 | batch  300/469 | loss 0.0169
+  epoch  3 | batch  400/469 | loss 0.0160
+  epoch  3 complete | avg loss 0.0169
+  epoch  4 | batch    0/469 | loss 0.0156
+  epoch  4 | batch  100/469 | loss 0.0157
+  epoch  4 | batch  200/469 | loss 0.0143
+  epoch  4 | batch  300/469 | loss 0.0141
+  epoch  4 | batch  400/469 | loss 0.0146
+  epoch  4 complete | avg loss 0.0151
+  epoch  5 | batch    0/469 | loss 0.0140
+  epoch  5 | batch  100/469 | loss 0.0139
+  epoch  5 | batch  200/469 | loss 0.0136
+  epoch  5 | batch  300/469 | loss 0.0138
+  epoch  5 | batch  400/469 | loss 0.0134
+  epoch  5 complete | avg loss 0.0140
+  epoch  6 | batch    0/469 | loss 0.0136
+  epoch  6 | batch  100/469 | loss 0.0132
+  epoch  6 | batch  200/469 | loss 0.0129
   epoch  6 | batch  300/469 | loss 0.0132
-  epoch  6 | batch  400/469 | loss 0.0135
-  epoch  6 complete | avg loss 0.0136
-  epoch  7 | batch    0/469 | loss 0.0130
-  epoch  7 | batch  100/469 | loss 0.0145
+  epoch  6 | batch  400/469 | loss 0.0142
+  epoch  6 complete | avg loss 0.0133
+  epoch  7 | batch    0/469 | loss 0.0138
+  epoch  7 | batch  100/469 | loss 0.0121
   epoch  7 | batch  200/469 | loss 0.0117
-  epoch  7 | batch  300/469 | loss 0.0120
-  epoch  7 | batch  400/469 | loss 0.0115
-  epoch  7 complete | avg loss 0.0129
-  epoch  8 | batch    0/469 | loss 0.0125
-  epoch  8 | batch  100/469 | loss 0.0124
-  epoch  8 | batch  200/469 | loss 0.0116
-  epoch  8 | batch  300/469 | loss 0.0124
-  epoch  8 | batch  400/469 | loss 0.0126
-  epoch  8 complete | avg loss 0.0124
-  epoch  9 | batch    0/469 | loss 0.0135
-  epoch  9 | batch  100/469 | loss 0.0118
-  epoch  9 | batch  200/469 | loss 0.0108
-  epoch  9 | batch  300/469 | loss 0.0125
-  epoch  9 | batch  400/469 | loss 0.0126
-  epoch  9 complete | avg loss 0.0119
-  epoch 10 | batch    0/469 | loss 0.0112
-  epoch 10 | batch  100/469 | loss 0.0115
-  epoch 10 | batch  200/469 | loss 0.0111
-  epoch 10 | batch  300/469 | loss 0.0117
-  epoch 10 | batch  400/469 | loss 0.0115
-  epoch 10 complete | avg loss 0.0116
+  epoch  7 | batch  300/469 | loss 0.0123
+  epoch  7 | batch  400/469 | loss 0.0141
+  epoch  7 complete | avg loss 0.0127
+  epoch  8 | batch    0/469 | loss 0.0128
+  epoch  8 | batch  100/469 | loss 0.0120
+  epoch  8 | batch  200/469 | loss 0.0111
+  epoch  8 | batch  300/469 | loss 0.0115
+  epoch  8 | batch  400/469 | loss 0.0118
+  epoch  8 complete | avg loss 0.0121
+  epoch  9 | batch    0/469 | loss 0.0130
+  epoch  9 | batch  100/469 | loss 0.0115
+  epoch  9 | batch  200/469 | loss 0.0125
+  epoch  9 | batch  300/469 | loss 0.0117
+  epoch  9 | batch  400/469 | loss 0.0111
+  epoch  9 complete | avg loss 0.0117
+  epoch 10 | batch    0/469 | loss 0.0109
+  epoch 10 | batch  100/469 | loss 0.0125
+  epoch 10 | batch  200/469 | loss 0.0115
+  epoch 10 | batch  300/469 | loss 0.0104
+  epoch 10 | batch  400/469 | loss 0.0114
+  epoch 10 complete | avg loss 0.0114
   epoch 11 | batch    0/469 | loss 0.0104
-  epoch 11 | batch  100/469 | loss 0.0115
-  epoch 11 | batch  200/469 | loss 0.0109
-  epoch 11 | batch  300/469 | loss 0.0115
-  epoch 11 | batch  400/469 | loss 0.0108
-  epoch 11 complete | avg loss 0.0112
-  epoch 12 | batch    0/469 | loss 0.0111
-  epoch 12 | batch  100/469 | loss 0.0114
-  epoch 12 | batch  200/469 | loss 0.0109
-  epoch 12 | batch  300/469 | loss 0.0108
-  epoch 12 | batch  400/469 | loss 0.0099
-  epoch 12 complete | avg loss 0.0109
-  epoch 13 | batch    0/469 | loss 0.0110
-  epoch 13 | batch  100/469 | loss 0.0109
-  epoch 13 | batch  200/469 | loss 0.0101
-  epoch 13 | batch  300/469 | loss 0.0124
-  epoch 13 | batch  400/469 | loss 0.0093
-  epoch 13 complete | avg loss 0.0107
-  epoch 14 | batch    0/469 | loss 0.0113
-  epoch 14 | batch  100/469 | loss 0.0112
-  epoch 14 | batch  200/469 | loss 0.0105
-  epoch 14 | batch  300/469 | loss 0.0104
-  epoch 14 | batch  400/469 | loss 0.0102
-  epoch 14 complete | avg loss 0.0105
-  epoch 15 | batch    0/469 | loss 0.0115
-  epoch 15 | batch  100/469 | loss 0.0096
-  epoch 15 | batch  200/469 | loss 0.0098
-  epoch 15 | batch  300/469 | loss 0.0101
-  epoch 15 | batch  400/469 | loss 0.0123
-  epoch 15 complete | avg loss 0.0103
-  epoch 16 | batch    0/469 | loss 0.0100
-  epoch 16 | batch  100/469 | loss 0.0114
-  epoch 16 | batch  200/469 | loss 0.0111
-  epoch 16 | batch  300/469 | loss 0.0105
-  epoch 16 | batch  400/469 | loss 0.0103
+  epoch 11 | batch  100/469 | loss 0.0113
+  epoch 11 | batch  200/469 | loss 0.0106
+  epoch 11 | batch  300/469 | loss 0.0120
+  epoch 11 | batch  400/469 | loss 0.0100
+  epoch 11 complete | avg loss 0.0111
+  epoch 12 | batch    0/469 | loss 0.0115
+  epoch 12 | batch  100/469 | loss 0.0099
+  epoch 12 | batch  200/469 | loss 0.0107
+  epoch 12 | batch  300/469 | loss 0.0101
+  epoch 12 | batch  400/469 | loss 0.0112
+  epoch 12 complete | avg loss 0.0108
+  epoch 13 | batch    0/469 | loss 0.0099
+  epoch 13 | batch  100/469 | loss 0.0104
+  epoch 13 | batch  200/469 | loss 0.0103
+  epoch 13 | batch  300/469 | loss 0.0107
+  epoch 13 | batch  400/469 | loss 0.0105
+  epoch 13 complete | avg loss 0.0106
+  epoch 14 | batch    0/469 | loss 0.0097
+  epoch 14 | batch  100/469 | loss 0.0105
+  epoch 14 | batch  200/469 | loss 0.0115
+  epoch 14 | batch  300/469 | loss 0.0106
+  epoch 14 | batch  400/469 | loss 0.0103
+  epoch 14 complete | avg loss 0.0104
+  epoch 15 | batch    0/469 | loss 0.0101
+  epoch 15 | batch  100/469 | loss 0.0106
+  epoch 15 | batch  200/469 | loss 0.0115
+  epoch 15 | batch  300/469 | loss 0.0099
+  epoch 15 | batch  400/469 | loss 0.0107
+  epoch 15 complete | avg loss 0.0102
+  epoch 16 | batch    0/469 | loss 0.0102
+  epoch 16 | batch  100/469 | loss 0.0102
+  epoch 16 | batch  200/469 | loss 0.0104
+  epoch 16 | batch  300/469 | loss 0.0106
+  epoch 16 | batch  400/469 | loss 0.0097
   epoch 16 complete | avg loss 0.0101
   epoch 17 | batch    0/469 | loss 0.0092
-  epoch 17 | batch  100/469 | loss 0.0106
-  epoch 17 | batch  200/469 | loss 0.0095
-  epoch 17 | batch  300/469 | loss 0.0099
-  epoch 17 | batch  400/469 | loss 0.0101
-  epoch 17 complete | avg loss 0.0100
-  epoch 18 | batch    0/469 | loss 0.0099
-  epoch 18 | batch  100/469 | loss 0.0101
-  epoch 18 | batch  200/469 | loss 0.0093
-  epoch 18 | batch  300/469 | loss 0.0105
-  epoch 18 | batch  400/469 | loss 0.0097
+  epoch 17 | batch  100/469 | loss 0.0108
+  epoch 17 | batch  200/469 | loss 0.0097
+  epoch 17 | batch  300/469 | loss 0.0097
+  epoch 17 | batch  400/469 | loss 0.0099
+  epoch 17 complete | avg loss 0.0099
+  epoch 18 | batch    0/469 | loss 0.0102
+  epoch 18 | batch  100/469 | loss 0.0113
+  epoch 18 | batch  200/469 | loss 0.0100
+  epoch 18 | batch  300/469 | loss 0.0104
+  epoch 18 | batch  400/469 | loss 0.0089
   epoch 18 complete | avg loss 0.0098
-  epoch 19 | batch    0/469 | loss 0.0101
-  epoch 19 | batch  100/469 | loss 0.0104
-  epoch 19 | batch  200/469 | loss 0.0094
-  epoch 19 | batch  300/469 | loss 0.0089
-  epoch 19 | batch  400/469 | loss 0.0085
-  epoch 19 complete | avg loss 0.0097
-  epoch 20 | batch    0/469 | loss 0.0097
-  epoch 20 | batch  100/469 | loss 0.0088
-  epoch 20 | batch  200/469 | loss 0.0108
-  epoch 20 | batch  300/469 | loss 0.0094
-  epoch 20 | batch  400/469 | loss 0.0093
+  epoch 19 | batch    0/469 | loss 0.0108
+  epoch 19 | batch  100/469 | loss 0.0100
+  epoch 19 | batch  200/469 | loss 0.0099
+  epoch 19 | batch  300/469 | loss 0.0093
+  epoch 19 | batch  400/469 | loss 0.0092
+  epoch 19 complete | avg loss 0.0096
+  epoch 20 | batch    0/469 | loss 0.0085
+  epoch 20 | batch  100/469 | loss 0.0095
+  epoch 20 | batch  200/469 | loss 0.0088
+  epoch 20 | batch  300/469 | loss 0.0106
+  epoch 20 | batch  400/469 | loss 0.0097
   epoch 20 complete | avg loss 0.0095
 \end{verbatim}
 
@@ -1767,7 +1786,6 @@ points)}\label{task-4-visualizing-reconstructions-6-points}
 
 \CommentTok{\# run task 4}
 \NormalTok{visualize\_reconstructions(model, test\_loader, num\_images}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
-
 \end{Highlighting}
 \end{Shaded}
 
