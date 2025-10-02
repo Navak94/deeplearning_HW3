@@ -458,7 +458,7 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
             if "weight" in name:
                 weights.append(p)
             else:
-                biases.append(p)
+                biases.append(p) 
             
         optimizer = torch.optim.SGD([{'params': weights, 'weight_decay': aplha_choice},{'params': biases,   'weight_decay': 0.0}],lr=learning_rate_choice)
 
@@ -503,7 +503,6 @@ def hyperparam_tuning(train_dataset, val_dataset, seed=541):
 # Run hyperparameter tuning
 best_cfg, best_acc = hyperparam_tuning(train_dataset, val_dataset)
 print(f"Best config: {best_cfg} with val_acc={best_acc:.4f}")
-
 ```
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_2 >}}
@@ -561,7 +560,6 @@ for epoch in range(epochs_final):
 # Print the length of the parameter_history list
 print(f"Length of parameter history: {len(parameter_history)}")
 print(f"Final Test Accuracy: {test_acc:.4f}")
-
 ```
 
 {{< embed cs541_hw3_p2-3_d1a.ipynb#prob2_3 >}}
@@ -907,7 +905,6 @@ model = Autoencoder()
 params = sum(p.numel() for p in model.parameters())
 print("Model ready")
 print(f"- parameters: {params:,}")
-
 ```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task2 >}}
@@ -1008,7 +1005,6 @@ def visualize_reconstructions(model: nn.Module, test_loader: DataLoader, num_ima
 
 # run task 4
 visualize_reconstructions(model, test_loader, num_images=2)
-
 ```
 
 {{< embed cs541_hw3_p4_d1a.ipynb#task4 >}}
