@@ -550,8 +550,11 @@ parameter_history = []
 for epoch in range(epochs_final):
     # BEGIN YOUR CODE HERE (~2 lines)
 
-    t0 = __import__('time').time(); loss, flat_params = train_epoch(best_model, full_train_loader, criterion, optimizer)
-    parameter_history.append(flat_params); test_acc = evaluate(best_model, test_loader); t1 = __import__('time').time()
+    t0 = __import__('time').time()
+    loss, flat_params = train_epoch(best_model, full_train_loader, criterion, optimizer)
+    parameter_history.append(flat_params) 
+    test_acc = evaluate(best_model, test_loader)
+    t1 = __import__('time').time()
 
 
     # END YOUR CODE HERE
